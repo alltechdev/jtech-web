@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>JTech Forums</title><!-- v1.2 -->
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#111;--bg2:#1a1a1a;--bg3:#222;--fg:#eee;--fg2:#aaa;--accent:#4a9eff;
+  --danger:#e55;--success:#5a5;--border:#333;--focus:#4a9eff;
+  --radius:8px;--top-h:48px;
+}
+html.light{
+  --bg:#f5f5f5;--bg2:#fff;--bg3:#e8e8e8;--fg:#111;--fg2:#555;--accent:#1a73e8;
+  --danger:#d32f2f;--success:#388e3c;--border:#ddd;--focus:#1a73e8;
+}
+html{font-size:15px}
+@media(max-width:360px){html{font-size:13px}}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,system-ui,sans-serif;
+  padding-top:var(--top-h);min-height:100vh;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+button,input,textarea,select{font:inherit;color:inherit;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px}
+button{cursor:pointer;background:var(--accent);color:#fff;border:none;min-height:44px;padding:8px 16px}
+button:disabled{opacity:.5;pointer-events:none}
+textarea{width:100%;min-height:100px;resize:vertical}
+input[type=text],input[type=search],input[type=email],input[type=password],input[type=file]{width:100%;min-height:44px}
+:focus{outline:3px solid var(--focus);outline-offset:2px;scroll-margin-top:calc(var(--top-h) + 8px)}
+
+/* Top bar */
+#topbar{position:fixed;top:0;left:0;right:0;height:var(--top-h);background:var(--bg2);
+  display:flex;align-items:center;padding:0 8px;gap:8px;z-index:100;border-bottom:1px solid var(--border)}
+#topbar .back{display:none;background:none;color:var(--fg);min-height:36px;padding:4px 8px;font-size:1.2rem}
+#topbar .title{flex:1;font-weight:600;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar .search-btn{background:none;color:var(--fg);min-height:36px;padding:4px 8px;font-size:1.1rem}
+
+/* Menu dropdown */
+.menu-wrap{position:relative}
+.menu-drop{display:none;position:absolute;top:100%;right:0;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);min-width:160px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.5);margin-top:4px}
+.menu-drop.open{display:block}
+.menu-drop a{display:flex;padding:12px 16px;color:var(--fg);text-decoration:none;font-size:.9rem;min-height:44px;
+  align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.menu-drop a:last-child{border-bottom:none}
+.menu-drop a:focus,.menu-drop a:hover{background:var(--bg3)}
+
+/* Content */
+#app{max-width:640px;margin:0 auto;padding:8px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* List items */
+.list-item{display:block;padding:12px;border-bottom:1px solid var(--border);min-height:44px;
+  color:var(--fg);text-decoration:none;cursor:pointer}
+.list-item:hover,.list-item:focus{background:var(--bg3)}
+.list-item .item-title{font-weight:600;margin-bottom:4px;line-height:1.3}
+.list-item .item-meta{font-size:.8rem;color:var(--fg2);display:flex;gap:8px;flex-wrap:wrap}
+.list-item .item-excerpt{font-size:.85rem;color:var(--fg2);margin-top:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Unread badge */
+.unread-badge{background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;
+  min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;
+  justify-content:center;padding:0 5px;flex-shrink:0;margin-top:2px}
+
+/* Category badge */
+.cat{display:inline-block;font-size:.7rem;padding:1px 6px;border-radius:3px;color:#fff;font-weight:600}
+
+/* Post */
+.post{padding:12px;border-bottom:1px solid var(--border);cursor:pointer}
+.post.active{background:var(--bg3)}
+.post-actions{display:none}
+.post.active .post-actions{display:flex}
+.post-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.post-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg3)}
+.post-author{font-weight:600;font-size:.9rem}
+.post-date{font-size:.75rem;color:var(--fg2)}
+.post-num{font-size:.7rem;color:var(--fg2);margin-left:auto}
+.post-body{font-size:.9rem;line-height:1.5;word-break:break-word}
+.post-body img{max-width:100%;height:auto;border-radius:var(--radius)}
+.post-body img.emoji{display:inline;width:1.2em;height:1.2em;vertical-align:middle;border-radius:0}
+.post-body pre{background:var(--bg3);padding:8px;border-radius:var(--radius);overflow-x:auto;font-size:.8rem}
+.post-body blockquote{border-left:3px solid var(--border);padding-left:12px;color:var(--fg2);margin:8px 0}
+/* Discourse lightbox */
+.post-body .lightbox-wrapper{margin:8px 0}
+.post-body .lightbox-wrapper .meta{display:none}
+.post-body .lightbox-wrapper a.lightbox{display:block}
+/* Discourse onebox embeds */
+.post-body aside.onebox{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin:8px 0}
+.post-body aside.onebox .source{font-size:.8rem;color:var(--fg2);margin-bottom:4px}
+.post-body aside.onebox .source img{display:inline;width:16px;height:16px;vertical-align:middle;margin-right:4px}
+.post-body aside.onebox .onebox-body h3{font-size:.9rem;margin:4px 0}
+.post-body aside.onebox .onebox-body p{font-size:.8rem;color:var(--fg2)}
+.post-body aside.onebox .onebox-metadata{display:none}
+/* Discourse details/summary (accordion) */
+.post-body details{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0;margin:8px 0}
+.post-body details summary{padding:8px 12px;font-weight:600;font-size:.85rem;cursor:pointer;list-style:none;
+  display:flex;align-items:center;gap:6px;min-height:36px}
+.post-body details summary::-webkit-details-marker{display:none}
+.post-body details summary::before{content:'▶';font-size:.7rem;transition:transform .15s}
+.post-body details[open] summary::before{transform:rotate(90deg)}
+.post-body details summary:focus{outline:3px solid var(--focus);outline-offset:-1px}
+.post-body details > :not(summary){padding:0 12px 8px}
+/* Discourse quotes */
+.post-body aside.quote{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin:8px 0}
+.post-body aside.quote .title{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--fg2);margin-bottom:4px}
+.post-body aside.quote .title img.avatar{width:20px;height:20px;border-radius:50%}
+.post-body aside.quote .title .quote-controls{display:none}
+/* Hide Discourse SVG icon references */
+.post-body svg.fa,.post-body .svg-icon{display:none}
+/* Make all links in posts focusable and visible */
+.post-body a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.post-actions{gap:8px;margin-top:8px;flex-wrap:wrap}
+.post-actions button{background:none;color:var(--fg2);min-height:32px;padding:4px 8px;font-size:.85rem;border:1px solid var(--border);display:inline-flex;align-items:center;gap:4px}
+button svg,.icon svg{vertical-align:middle}
+.post-actions button.liked{color:var(--danger);border-color:var(--danger)}
+
+/* Compose */
+.compose{padding:12px}
+.compose .field{margin-bottom:12px}
+.compose label{display:block;font-size:.85rem;color:var(--fg2);margin-bottom:4px}
+.compose .actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* Reply indicator */
+.reply-indicator{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);
+  border-radius:var(--radius) var(--radius) 0 0;font-size:.8rem;color:var(--fg2);margin-bottom:-1px}
+.reply-indicator .cancel-reply{background:none;color:var(--fg2);min-height:28px;padding:2px 8px;font-size:.8rem;border:1px solid var(--border)}
+
+/* Pull to refresh */
+#ptr{text-align:center;color:var(--fg2);font-size:.8rem;padding:0;height:0;overflow:hidden;
+  transition:height .2s,padding .2s}
+#ptr.visible{height:40px;padding:10px 0}
+#ptr.refreshing{color:var(--accent)}
+
+/* Notifications */
+.notif-item{padding:12px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start;min-height:44px;cursor:pointer;text-decoration:none;color:var(--fg)}
+.notif-item:focus,.notif-item:hover{background:var(--bg3)}
+.notif-item.unread{border-left:3px solid var(--accent)}
+.notif-icon{font-size:1.2rem;line-height:0;display:flex;align-items:center}
+.notif-text{flex:1;font-size:.85rem}
+.notif-time{font-size:.7rem;color:var(--fg2)}
+
+/* Profile */
+.profile-header{text-align:center;padding:16px}
+.profile-header .avatar{width:80px;height:80px;border-radius:50%;margin:0 auto 8px}
+.profile-header h2{font-size:1.1rem}
+.profile-header .bio{font-size:.85rem;color:var(--fg2);margin-top:4px}
+.profile-stats{display:flex;justify-content:center;gap:24px;padding:8px;font-size:.85rem}
+.profile-stats div{text-align:center}
+.profile-stats .num{font-weight:700;font-size:1.1rem;display:block}
+
+/* Login */
+.login-box{padding:24px;text-align:center}
+.login-box h2{margin-bottom:16px}
+.login-box .field{margin-bottom:12px;text-align:left}
+.login-box p{font-size:.85rem;color:var(--fg2);margin-bottom:16px}
+
+/* Search bar */
+.search-bar{display:flex;gap:8px;padding:8px 0;margin-bottom:8px}
+.search-bar input{flex:1}
+.search-bar button{min-width:60px}
+
+/* Utility */
+.loading{text-align:center;padding:24px;color:var(--fg2)}
+.empty{text-align:center;padding:32px;color:var(--fg2);font-size:.9rem}
+.error{color:var(--danger);padding:12px;text-align:center;font-size:.9rem}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;
+  justify-content:center;z-index:200;padding:16px}
+.confirm-box{background:var(--bg2);border-radius:var(--radius);padding:24px;max-width:300px;width:100%;text-align:center}
+.confirm-box p{margin-bottom:16px}
+.confirm-box .actions{display:flex;gap:8px;justify-content:center}
+
+/* Poll */
+.poll{background:var(--bg3);border-radius:var(--radius);padding:12px;margin:8px 0}
+.poll h4{margin-bottom:8px;font-size:.9rem}
+.poll-option{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:4px;cursor:pointer;min-height:44px}
+.poll-option:hover,.poll-option:focus{background:var(--bg2)}
+.poll-option.voted{border-color:var(--accent);background:rgba(74,158,255,.1)}
+.poll-bar{height:4px;background:var(--accent);border-radius:2px;margin-top:4px}
+.poll-pct{font-size:.75rem;color:var(--fg2)}
+
+/* Topic status icons */
+.topic-status-icon{opacity:.5;margin-right:4px;display:inline;vertical-align:middle}
+.topic-status-icon svg{vertical-align:middle}
+
+/* Reactions */
+.post-reactions{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.reaction-pill{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:2px 8px;font-size:.8rem;
+  min-height:28px;display:inline-flex;align-items:center;gap:3px;cursor:pointer}
+.reaction-pill:focus,.reaction-pill:hover{outline:3px solid var(--focus);background:var(--bg2)}
+.reaction-pill.reacted{border-color:var(--accent);background:rgba(74,158,255,.15)}
+.reaction-picker-grid{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.reaction-pick{font-size:1.6rem;background:none;border:none;min-height:44px;min-width:44px;padding:6px;cursor:pointer;border-radius:var(--radius)}
+.reaction-pick:focus,.reaction-pick:hover{background:var(--bg3);outline:3px solid var(--focus)}
+
+/* User badge pills */
+.user-badge{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--fg2);border:1px solid var(--border)}
+
+/* Mention dropdown */
+.mention-dropdown{position:absolute;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);z-index:150;max-height:200px;overflow-y:auto}
+.mention-item{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;min-height:36px;font-size:.85rem}
+.mention-item:focus,.mention-item:hover{background:var(--bg3);outline:3px solid var(--focus)}
+
+/* Emoji picker */
+.emoji-picker{background:var(--bg2);border-radius:var(--radius);padding:12px;max-width:320px;width:100%;max-height:60vh;overflow-y:auto}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.emoji-item{font-size:1.4rem;background:none;border:none;min-height:36px;min-width:36px;padding:4px;cursor:pointer;border-radius:var(--radius)}
+.emoji-item:focus,.emoji-item:hover{background:var(--bg3);outline:3px solid var(--focus)}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<header id="topbar">
+  <button class="back" id="backBtn" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg></button>
+  <span class="title" id="topTitle">JTech Forums</span>
+  <button class="search-btn" id="themeBtn" aria-label="Toggle theme" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+  <button class="search-btn" id="createBtn" aria-label="Create" style="display:none" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <button class="search-btn" id="refreshBtn" aria-label="Refresh" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+  <div class="menu-wrap">
+    <button class="search-btn" id="menuBtn" aria-label="Menu" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+    <div class="menu-drop" id="menuDrop">
+      <a href="#/" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Topics</a>
+      <a href="#/messages" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Messages</a>
+      <a href="#/notifications" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Notifications</a>
+      <a href="#/u/me" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</a>
+      <a href="#/search" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search</a>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border)">
+        <button id="scaleDown" tabindex="0" style="flex:1;min-height:38px;font-size:.9rem;background:var(--bg3);color:var(--fg);border:1px solid var(--border)">A−</button>
+        <span id="scaleLabel" style="font-size:.8rem;color:var(--fg2);min-width:36px;text-align:center">100%</span>
+        <button id="scaleUp" tabindex="0" style="flex:1;min-height:38px;font-size:.9rem;background:var(--bg3);color:var(--fg);border:1px solid var(--border)">A+</button>
+      </div>
+      <a href="#" id="menuAuthBtn" tabindex="0"></a>
+    </div>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main id="app"></main>
+
+<script><!--SCRIPT--></script>
+</body>
+</html>

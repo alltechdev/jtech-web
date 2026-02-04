@@ -1,0 +1,2916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>JTech Forums</title><!-- v1.2 -->
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#111;--bg2:#1a1a1a;--bg3:#222;--fg:#eee;--fg2:#aaa;--accent:#4a9eff;
+  --danger:#e55;--success:#5a5;--border:#333;--focus:#4a9eff;
+  --radius:8px;--top-h:48px;
+}
+html.light{
+  --bg:#f5f5f5;--bg2:#fff;--bg3:#e8e8e8;--fg:#111;--fg2:#555;--accent:#1a73e8;
+  --danger:#d32f2f;--success:#388e3c;--border:#ddd;--focus:#1a73e8;
+}
+html{font-size:15px}
+@media(max-width:360px){html{font-size:13px}}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,system-ui,sans-serif;
+  padding-top:var(--top-h);min-height:100vh;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+button,input,textarea,select{font:inherit;color:inherit;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px}
+button{cursor:pointer;background:var(--accent);color:#fff;border:none;min-height:44px;padding:8px 16px}
+button:disabled{opacity:.5;pointer-events:none}
+textarea{width:100%;min-height:100px;resize:vertical}
+input[type=text],input[type=search],input[type=email],input[type=password],input[type=file]{width:100%;min-height:44px}
+:focus{outline:3px solid var(--focus);outline-offset:2px;scroll-margin-top:calc(var(--top-h) + 8px)}
+
+/* Top bar */
+#topbar{position:fixed;top:0;left:0;right:0;height:var(--top-h);background:var(--bg2);
+  display:flex;align-items:center;padding:0 8px;gap:8px;z-index:100;border-bottom:1px solid var(--border)}
+#topbar .back{display:none;background:none;color:var(--fg);min-height:36px;padding:4px 8px;font-size:1.2rem}
+#topbar .title{flex:1;font-weight:600;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar .search-btn{background:none;color:var(--fg);min-height:36px;padding:4px 8px;font-size:1.1rem}
+
+/* Menu dropdown */
+.menu-wrap{position:relative}
+.menu-drop{display:none;position:absolute;top:100%;right:0;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);min-width:160px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.5);margin-top:4px}
+.menu-drop.open{display:block}
+.menu-drop a{display:flex;padding:12px 16px;color:var(--fg);text-decoration:none;font-size:.9rem;min-height:44px;
+  align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.menu-drop a:last-child{border-bottom:none}
+.menu-drop a:focus,.menu-drop a:hover{background:var(--bg3)}
+
+/* Content */
+#app{max-width:640px;margin:0 auto;padding:8px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* List items */
+.list-item{display:block;padding:12px;border-bottom:1px solid var(--border);min-height:44px;
+  color:var(--fg);text-decoration:none;cursor:pointer}
+.list-item:hover,.list-item:focus{background:var(--bg3)}
+.list-item .item-title{font-weight:600;margin-bottom:4px;line-height:1.3}
+.list-item .item-meta{font-size:.8rem;color:var(--fg2);display:flex;gap:8px;flex-wrap:wrap}
+.list-item .item-excerpt{font-size:.85rem;color:var(--fg2);margin-top:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Unread badge */
+.unread-badge{background:var(--accent);color:#fff;font-size:.7rem;font-weight:700;
+  min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;
+  justify-content:center;padding:0 5px;flex-shrink:0;margin-top:2px}
+
+/* Category badge */
+.cat{display:inline-block;font-size:.7rem;padding:1px 6px;border-radius:3px;color:#fff;font-weight:600}
+
+/* Post */
+.post{padding:12px;border-bottom:1px solid var(--border);cursor:pointer}
+.post.active{background:var(--bg3)}
+.post-actions{display:none}
+.post.active .post-actions{display:flex}
+.post-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.post-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg3)}
+.post-author{font-weight:600;font-size:.9rem}
+.post-date{font-size:.75rem;color:var(--fg2)}
+.post-num{font-size:.7rem;color:var(--fg2);margin-left:auto}
+.post-body{font-size:.9rem;line-height:1.5;word-break:break-word}
+.post-body img{max-width:100%;height:auto;border-radius:var(--radius)}
+.post-body img.emoji{display:inline;width:1.2em;height:1.2em;vertical-align:middle;border-radius:0}
+.post-body pre{background:var(--bg3);padding:8px;border-radius:var(--radius);overflow-x:auto;font-size:.8rem}
+.post-body blockquote{border-left:3px solid var(--border);padding-left:12px;color:var(--fg2);margin:8px 0}
+/* Discourse lightbox */
+.post-body .lightbox-wrapper{margin:8px 0}
+.post-body .lightbox-wrapper .meta{display:none}
+.post-body .lightbox-wrapper a.lightbox{display:block}
+/* Discourse onebox embeds */
+.post-body aside.onebox{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin:8px 0}
+.post-body aside.onebox .source{font-size:.8rem;color:var(--fg2);margin-bottom:4px}
+.post-body aside.onebox .source img{display:inline;width:16px;height:16px;vertical-align:middle;margin-right:4px}
+.post-body aside.onebox .onebox-body h3{font-size:.9rem;margin:4px 0}
+.post-body aside.onebox .onebox-body p{font-size:.8rem;color:var(--fg2)}
+.post-body aside.onebox .onebox-metadata{display:none}
+/* Discourse details/summary (accordion) */
+.post-body details{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0;margin:8px 0}
+.post-body details summary{padding:8px 12px;font-weight:600;font-size:.85rem;cursor:pointer;list-style:none;
+  display:flex;align-items:center;gap:6px;min-height:36px}
+.post-body details summary::-webkit-details-marker{display:none}
+.post-body details summary::before{content:'▶';font-size:.7rem;transition:transform .15s}
+.post-body details[open] summary::before{transform:rotate(90deg)}
+.post-body details summary:focus{outline:3px solid var(--focus);outline-offset:-1px}
+.post-body details > :not(summary){padding:0 12px 8px}
+/* Discourse quotes */
+.post-body aside.quote{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin:8px 0}
+.post-body aside.quote .title{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--fg2);margin-bottom:4px}
+.post-body aside.quote .title img.avatar{width:20px;height:20px;border-radius:50%}
+.post-body aside.quote .title .quote-controls{display:none}
+/* Hide Discourse SVG icon references */
+.post-body svg.fa,.post-body .svg-icon{display:none}
+/* Make all links in posts focusable and visible */
+.post-body a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.post-actions{gap:8px;margin-top:8px;flex-wrap:wrap}
+.post-actions button{background:none;color:var(--fg2);min-height:32px;padding:4px 8px;font-size:.85rem;border:1px solid var(--border);display:inline-flex;align-items:center;gap:4px}
+button svg,.icon svg{vertical-align:middle}
+.post-actions button.liked{color:var(--danger);border-color:var(--danger)}
+
+/* Compose */
+.compose{padding:12px}
+.compose .field{margin-bottom:12px}
+.compose label{display:block;font-size:.85rem;color:var(--fg2);margin-bottom:4px}
+.compose .actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* Reply indicator */
+.reply-indicator{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);
+  border-radius:var(--radius) var(--radius) 0 0;font-size:.8rem;color:var(--fg2);margin-bottom:-1px}
+.reply-indicator .cancel-reply{background:none;color:var(--fg2);min-height:28px;padding:2px 8px;font-size:.8rem;border:1px solid var(--border)}
+
+/* Pull to refresh */
+#ptr{text-align:center;color:var(--fg2);font-size:.8rem;padding:0;height:0;overflow:hidden;
+  transition:height .2s,padding .2s}
+#ptr.visible{height:40px;padding:10px 0}
+#ptr.refreshing{color:var(--accent)}
+
+/* Notifications */
+.notif-item{padding:12px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start;min-height:44px;cursor:pointer;text-decoration:none;color:var(--fg)}
+.notif-item:focus,.notif-item:hover{background:var(--bg3)}
+.notif-item.unread{border-left:3px solid var(--accent)}
+.notif-icon{font-size:1.2rem;line-height:0;display:flex;align-items:center}
+.notif-text{flex:1;font-size:.85rem}
+.notif-time{font-size:.7rem;color:var(--fg2)}
+
+/* Profile */
+.profile-header{text-align:center;padding:16px}
+.profile-header .avatar{width:80px;height:80px;border-radius:50%;margin:0 auto 8px}
+.profile-header h2{font-size:1.1rem}
+.profile-header .bio{font-size:.85rem;color:var(--fg2);margin-top:4px}
+.profile-stats{display:flex;justify-content:center;gap:24px;padding:8px;font-size:.85rem}
+.profile-stats div{text-align:center}
+.profile-stats .num{font-weight:700;font-size:1.1rem;display:block}
+
+/* Login */
+.login-box{padding:24px;text-align:center}
+.login-box h2{margin-bottom:16px}
+.login-box .field{margin-bottom:12px;text-align:left}
+.login-box p{font-size:.85rem;color:var(--fg2);margin-bottom:16px}
+
+/* Search bar */
+.search-bar{display:flex;gap:8px;padding:8px 0;margin-bottom:8px}
+.search-bar input{flex:1}
+.search-bar button{min-width:60px}
+
+/* Utility */
+.loading{text-align:center;padding:24px;color:var(--fg2)}
+.empty{text-align:center;padding:32px;color:var(--fg2);font-size:.9rem}
+.error{color:var(--danger);padding:12px;text-align:center;font-size:.9rem}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;
+  justify-content:center;z-index:200;padding:16px}
+.confirm-box{background:var(--bg2);border-radius:var(--radius);padding:24px;max-width:300px;width:100%;text-align:center}
+.confirm-box p{margin-bottom:16px}
+.confirm-box .actions{display:flex;gap:8px;justify-content:center}
+
+/* Poll */
+.poll{background:var(--bg3);border-radius:var(--radius);padding:12px;margin:8px 0}
+.poll h4{margin-bottom:8px;font-size:.9rem}
+.poll-option{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:4px;cursor:pointer;min-height:44px}
+.poll-option:hover,.poll-option:focus{background:var(--bg2)}
+.poll-option.voted{border-color:var(--accent);background:rgba(74,158,255,.1)}
+.poll-bar{height:4px;background:var(--accent);border-radius:2px;margin-top:4px}
+.poll-pct{font-size:.75rem;color:var(--fg2)}
+
+/* Topic status icons */
+.topic-status-icon{opacity:.5;margin-right:4px;display:inline;vertical-align:middle}
+.topic-status-icon svg{vertical-align:middle}
+
+/* Reactions */
+.post-reactions{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.reaction-pill{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:2px 8px;font-size:.8rem;
+  min-height:28px;display:inline-flex;align-items:center;gap:3px;cursor:pointer}
+.reaction-pill:focus,.reaction-pill:hover{outline:3px solid var(--focus);background:var(--bg2)}
+.reaction-pill.reacted{border-color:var(--accent);background:rgba(74,158,255,.15)}
+.reaction-picker-grid{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.reaction-pick{font-size:1.6rem;background:none;border:none;min-height:44px;min-width:44px;padding:6px;cursor:pointer;border-radius:var(--radius)}
+.reaction-pick:focus,.reaction-pick:hover{background:var(--bg3);outline:3px solid var(--focus)}
+
+/* User badge pills */
+.user-badge{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--fg2);border:1px solid var(--border)}
+
+/* Mention dropdown */
+.mention-dropdown{position:absolute;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);z-index:150;max-height:200px;overflow-y:auto}
+.mention-item{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;min-height:36px;font-size:.85rem}
+.mention-item:focus,.mention-item:hover{background:var(--bg3);outline:3px solid var(--focus)}
+
+/* Emoji picker */
+.emoji-picker{background:var(--bg2);border-radius:var(--radius);padding:12px;max-width:320px;width:100%;max-height:60vh;overflow-y:auto}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.emoji-item{font-size:1.4rem;background:none;border:none;min-height:36px;min-width:36px;padding:4px;cursor:pointer;border-radius:var(--radius)}
+.emoji-item:focus,.emoji-item:hover{background:var(--bg3);outline:3px solid var(--focus)}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<header id="topbar">
+  <button class="back" id="backBtn" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg></button>
+  <span class="title" id="topTitle">JTech Forums</span>
+  <button class="search-btn" id="themeBtn" aria-label="Toggle theme" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+  <button class="search-btn" id="createBtn" aria-label="Create" style="display:none" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+  <button class="search-btn" id="refreshBtn" aria-label="Refresh" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+  <div class="menu-wrap">
+    <button class="search-btn" id="menuBtn" aria-label="Menu" tabindex="0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+    <div class="menu-drop" id="menuDrop">
+      <a href="#/" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Topics</a>
+      <a href="#/messages" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Messages</a>
+      <a href="#/notifications" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Notifications</a>
+      <a href="#/u/me" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</a>
+      <a href="#/search" data-auth tabindex="0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search</a>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border)">
+        <button id="scaleDown" tabindex="0" style="flex:1;min-height:38px;font-size:.9rem;background:var(--bg3);color:var(--fg);border:1px solid var(--border)">A−</button>
+        <span id="scaleLabel" style="font-size:.8rem;color:var(--fg2);min-width:36px;text-align:center">100%</span>
+        <button id="scaleUp" tabindex="0" style="flex:1;min-height:38px;font-size:.9rem;background:var(--bg3);color:var(--fg);border:1px solid var(--border)">A+</button>
+      </div>
+      <a href="#" id="menuAuthBtn" tabindex="0"></a>
+    </div>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main id="app"></main>
+
+<script>function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+// ============ POLYFILLS (Chrome 44) ============
+if (!NodeList.prototype.forEach) {
+  NodeList.prototype.forEach = Array.prototype.forEach;
+}
+
+// ============ CONFIG ============
+var PROXY = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? location.protocol + '//' + location.hostname + ':8080' : location.origin + '/api';
+var SITE = 'https://forums.jtechforums.org';
+
+// ============ STATE ============
+var S = {
+  token: localStorage.getItem('jt_session_token') || '',
+  csrf: localStorage.getItem('jt_csrf') || '',
+  cookies: localStorage.getItem('jt_cookies') || '',
+  username: localStorage.getItem('jt_username') || '',
+  userId: localStorage.getItem('jt_user_id') || '',
+  categories: {},
+  drafts: JSON.parse(localStorage.getItem('jt_drafts') || '{}'),
+  history: []
+};
+function isLoggedIn() {
+  return !!(S.token || S.cookies);
+}
+function saveDraft(key, val) {
+  S.drafts[key] = val;
+  localStorage.setItem('jt_drafts', JSON.stringify(S.drafts));
+}
+function getDraft(key) {
+  return S.drafts[key] || '';
+}
+function clearDraft(key) {
+  delete S.drafts[key];
+  localStorage.setItem('jt_drafts', JSON.stringify(S.drafts));
+}
+
+// ============ API ============
+function api(_x) {
+  return _api.apply(this, arguments);
+}
+function _api() {
+  _api = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12(path) {
+    var opts,
+      url,
+      headers,
+      mergedHeaders,
+      resp,
+      newToken,
+      newCsrf,
+      newCookies,
+      text,
+      msg,
+      j,
+      ct,
+      _args12 = arguments;
+    return _regenerator().w(function (_context12) {
+      while (1) switch (_context12.n) {
+        case 0:
+          opts = _args12.length > 1 && _args12[1] !== undefined ? _args12[1] : {};
+          url = PROXY + path;
+          headers = {
+            'Accept': 'application/json'
+          };
+          if (S.token) headers['X-Session-Token'] = S.token;
+          if (S.csrf) headers['X-CSRF-Token'] = S.csrf;
+          if (S.cookies) headers['X-Cookies'] = S.cookies;
+          if (opts.body && !(opts.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+            opts.body = JSON.stringify(opts.body);
+          }
+          // For FormData, don't set Content-Type (browser sets boundary), but keep auth headers
+          mergedHeaders = opts.body instanceof FormData ? _objectSpread({}, headers) // no Content-Type override
+          : _objectSpread(_objectSpread({}, headers), opts.headers || {});
+          delete opts.headers; // consumed
+          _context12.n = 1;
+          return fetch(url, _objectSpread(_objectSpread({}, opts), {}, {
+            headers: mergedHeaders
+          }));
+        case 1:
+          resp = _context12.v;
+          // Capture session token and CSRF from response
+          newToken = resp.headers.get('X-Session-Token');
+          if (newToken) {
+            S.token = newToken;
+            localStorage.setItem('jt_session_token', newToken);
+          }
+          newCsrf = resp.headers.get('X-CSRF-Token');
+          if (newCsrf) {
+            S.csrf = newCsrf;
+            localStorage.setItem('jt_csrf', newCsrf);
+          }
+          newCookies = resp.headers.get('X-Cookies');
+          if (newCookies) {
+            S.cookies = newCookies;
+            localStorage.setItem('jt_cookies', newCookies);
+          }
+          if (resp.ok) {
+            _context12.n = 4;
+            break;
+          }
+          if (!(resp.status === 401 || resp.status === 403)) {
+            _context12.n = 2;
+            break;
+          }
+          S.token = '';
+          S.csrf = '';
+          S.cookies = '';
+          localStorage.removeItem('jt_session_token');
+          localStorage.removeItem('jt_csrf');
+          localStorage.removeItem('jt_cookies');
+          location.hash = '#/';
+          route();
+          throw new Error('Session expired. Please log in again.');
+        case 2:
+          _context12.n = 3;
+          return resp.text();
+        case 3:
+          text = _context12.v;
+          try {
+            j = JSON.parse(text);
+            msg = j.errors && j.errors.join(', ') || j.error || text;
+          } catch (e) {
+            msg = text;
+          }
+          throw new Error(`${resp.status}: ${msg}`);
+        case 4:
+          ct = resp.headers.get('content-type') || '';
+          if (!ct.includes('json')) {
+            _context12.n = 5;
+            break;
+          }
+          return _context12.a(2, resp.json());
+        case 5:
+          return _context12.a(2, resp.text());
+      }
+    }, _callee12);
+  }));
+  return _api.apply(this, arguments);
+}
+function uploadFile(file, btn) {
+  return new Promise(function (resolve, reject) {
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = '0%';
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('type', 'composer');
+    var xhr = new XMLHttpRequest();
+    xhr.upload.addEventListener('progress', function (e) {
+      if (e.lengthComputable) btn.textContent = Math.round(e.loaded / e.total * 100) + '%';
+    });
+    xhr.addEventListener('load', function () {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText));
+        } catch (e) {
+          reject(new Error('Bad response'));
+        }
+      } else {
+        reject(new Error('Upload failed (' + xhr.status + ')'));
+      }
+    });
+    xhr.addEventListener('error', function () {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+      reject(new Error('Upload failed'));
+    });
+    xhr.open('POST', PROXY + '/uploads.json');
+    xhr.setRequestHeader('Accept', 'application/json');
+    if (S.token) xhr.setRequestHeader('X-Session-Token', S.token);
+    if (S.csrf) xhr.setRequestHeader('X-CSRF-Token', S.csrf);
+    if (S.cookies) xhr.setRequestHeader('X-Cookies', S.cookies);
+    xhr.send(fd);
+  });
+}
+
+// ============ ROUTER ============
+var $app = document.getElementById('app');
+var $title = document.getElementById('topTitle');
+var $back = document.getElementById('backBtn');
+var $menu = document.getElementById('menuDrop');
+var $menuBtn = document.getElementById('menuBtn');
+var $create = document.getElementById('createBtn');
+var createTarget = '';
+function setTitle(t) {
+  $title.textContent = t;
+  document.title = t + ' - JTech Forums';
+}
+function showBack(show) {
+  $back.style.display = show ? 'block' : 'none';
+}
+function showCreate(target) {
+  createTarget = target;
+  $create.style.display = target ? 'block' : 'none';
+}
+$create.addEventListener('click', function () {
+  if (createTarget) location.hash = createTarget;
+});
+document.getElementById('refreshBtn').addEventListener('click', function () {
+  return route();
+});
+function goBack() {
+  if (S.history.length > 1) {
+    S.history.pop();
+    location.hash = S.history[S.history.length - 1];
+  } else history.back();
+}
+$back.addEventListener('click', goBack);
+
+// Global keyboard navigation
+document.addEventListener('keydown', function (e) {
+  // Backspace / Escape = go back (when not in an input)
+  var tag = document.activeElement && document.activeElement.tagName;
+  var inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  if ((e.key === 'Backspace' || e.key === 'Escape') && !inInput) {
+    // Escape closes menu first
+    if ($menu.classList.contains('open')) {
+      toggleMenu(false);
+      $menuBtn.focus();
+      e.preventDefault();
+      return;
+    }
+    // Escape deactivates active post
+    var activePost = document.querySelector('.post.active');
+    if (activePost) {
+      deactivatePost(activePost);
+      activePost.focus();
+      e.preventDefault();
+      return;
+    }
+    // Escape closes any overlay dialog
+    var overlay = document.querySelector('.confirm-overlay');
+    if (overlay) {
+      var cb = overlay.querySelector('.cancel') || overlay.querySelector('.ok');
+      if (cb) cb.click();
+      e.preventDefault();
+      return;
+    }
+    if ($back.style.display !== 'none') {
+      e.preventDefault();
+      goBack();
+    }
+  }
+  // Escape in input = blur it so user can navigate away
+  if (e.key === 'Escape' && inInput) {
+    document.activeElement.blur();
+    e.preventDefault();
+  }
+});
+function route() {
+  return _route.apply(this, arguments);
+}
+function _route() {
+  _route = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee13() {
+    var hash, m, path, _t13;
+    return _regenerator().w(function (_context13) {
+      while (1) switch (_context13.p = _context13.n) {
+        case 0:
+          hash = location.hash || '#/';
+          if (S.history[S.history.length - 1] !== hash) S.history.push(hash);
+          if (isLoggedIn()) {
+            _context13.n = 1;
+            break;
+          }
+          showCreate('');
+          renderLogin();
+          return _context13.a(2);
+        case 1:
+          m = hash.match(/^#(\/.*)/);
+          path = m ? m[1] : '/';
+          showCreate('');
+          _context13.p = 2;
+          if (!(path === '/')) {
+            _context13.n = 4;
+            break;
+          }
+          _context13.n = 3;
+          return renderTopics();
+        case 3:
+          _context13.n = 20;
+          break;
+        case 4:
+          if (!path.match(/^\/t\/(\d+)/)) {
+            _context13.n = 6;
+            break;
+          }
+          _context13.n = 5;
+          return renderTopic(path.match(/^\/t\/(\d+)/)[1]);
+        case 5:
+          _context13.n = 20;
+          break;
+        case 6:
+          if (!(path === '/new-topic')) {
+            _context13.n = 7;
+            break;
+          }
+          renderNewTopic();
+          _context13.n = 20;
+          break;
+        case 7:
+          if (!(path === '/messages')) {
+            _context13.n = 9;
+            break;
+          }
+          _context13.n = 8;
+          return renderMessages();
+        case 8:
+          _context13.n = 20;
+          break;
+        case 9:
+          if (!path.match(/^\/messages\/(\d+)/)) {
+            _context13.n = 11;
+            break;
+          }
+          _context13.n = 10;
+          return renderTopic(path.match(/^\/messages\/(\d+)/)[1]);
+        case 10:
+          _context13.n = 20;
+          break;
+        case 11:
+          if (!(path === '/new-message')) {
+            _context13.n = 12;
+            break;
+          }
+          renderNewMessage();
+          _context13.n = 20;
+          break;
+        case 12:
+          if (!(path === '/notifications')) {
+            _context13.n = 14;
+            break;
+          }
+          _context13.n = 13;
+          return renderNotifications();
+        case 13:
+          _context13.n = 20;
+          break;
+        case 14:
+          if (!path.match(/^\/u\/(.+)/)) {
+            _context13.n = 16;
+            break;
+          }
+          _context13.n = 15;
+          return renderProfile(decodeURIComponent(path.match(/^\/u\/(.+)/)[1]));
+        case 15:
+          _context13.n = 20;
+          break;
+        case 16:
+          if (!(path === '/settings')) {
+            _context13.n = 17;
+            break;
+          }
+          renderSettings();
+          _context13.n = 20;
+          break;
+        case 17:
+          if (!path.match(/^\/search/)) {
+            _context13.n = 19;
+            break;
+          }
+          _context13.n = 18;
+          return renderSearch();
+        case 18:
+          _context13.n = 20;
+          break;
+        case 19:
+          _context13.n = 20;
+          return renderTopics();
+        case 20:
+          _context13.n = 22;
+          break;
+        case 21:
+          _context13.p = 21;
+          _t13 = _context13.v;
+          $app.innerHTML = `<div class="error">Error: ${esc(_t13.message)}</div>`;
+        case 22:
+          return _context13.a(2);
+      }
+    }, _callee13, null, [[2, 21]]);
+  }));
+  return _route.apply(this, arguments);
+}
+window.addEventListener('hashchange', route);
+
+// ============ HELPERS ============
+var _escEl = document.createElement('div');
+function esc(s) {
+  if (!s) return '';
+  _escEl.textContent = String(s);
+  return _escEl.innerHTML;
+}
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  var s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (s < 60) return 'now';
+  if (s < 3600) return Math.floor(s / 60) + 'm';
+  if (s < 86400) return Math.floor(s / 3600) + 'h';
+  if (s < 2592000) return Math.floor(s / 86400) + 'd';
+  return Math.floor(s / 2592000) + 'mo';
+}
+function avatarUrl(tpl, size) {
+  if (!tpl) return '';
+  return ASSET_BASE + tpl.replace('{size}', size || 48);
+}
+// Base for proxying assets (uploads, avatars, images) — uses origin root on Worker, PROXY on local
+var ASSET_BASE = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? PROXY : location.origin;
+// Rewrite URLs in post HTML to go through proxy
+function fixPostHtml(html) {
+  if (!html) return '';
+  return html.replace(/src="https:\/\/forums\.jtechforums\.org\/([^"]*?)"/g, `src="${ASSET_BASE}/$1"`).replace(/href="https:\/\/forums\.jtechforums\.org\/([^"]*?)"/g, `href="${ASSET_BASE}/$1"`).replace(/src="\/([^"]*?)"/g, `src="${ASSET_BASE}/$1"`).replace(/href="\/([^"]*?)"/g, `href="${ASSET_BASE}/$1"`).replace(/srcset="[^"]*"/g, '');
+}
+// SVG icons
+var IC = {
+  heart: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  bookmark: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+  reply: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>',
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  x: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  plus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  upload: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  msg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  bell: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  flag: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+  lock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><circle cx="12" cy="14" r="4"/><path d="M12 18v4"/></svg>',
+  smile: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  shield: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+};
+var REACTION_EMOJI = {
+  '+1': '\uD83D\uDC4D',
+  'folded_hands': '\uD83D\uDE4F',
+  'laughing': '\uD83D\uDE02',
+  'ok_hand': '\uD83D\uDC4C',
+  'man_shrugging': '\uD83E\uDD37\u200D\u2642\uFE0F'
+};
+var REACTION_LIST = ['+1', 'folded_hands', 'laughing', 'ok_hand', 'man_shrugging'];
+function catBadge(id) {
+  var c = S.categories[id];
+  if (!c) return '';
+  var bg = c.color ? '#' + c.color : '#666';
+  return `<span class="cat" style="background:${bg}">${esc(c.name)}</span>`;
+}
+function loadCategories() {
+  return _loadCategories.apply(this, arguments);
+}
+function _loadCategories() {
+  _loadCategories = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee14() {
+    var d, _t14;
+    return _regenerator().w(function (_context14) {
+      while (1) switch (_context14.p = _context14.n) {
+        case 0:
+          if (!Object.keys(S.categories).length) {
+            _context14.n = 1;
+            break;
+          }
+          return _context14.a(2);
+        case 1:
+          _context14.p = 1;
+          _context14.n = 2;
+          return api('/categories.json');
+        case 2:
+          d = _context14.v;
+          (d.category_list && d.category_list.categories || []).forEach(function (c) {
+            S.categories[c.id] = c;
+          });
+          _context14.n = 4;
+          break;
+        case 3:
+          _context14.p = 3;
+          _t14 = _context14.v;
+        case 4:
+          return _context14.a(2);
+      }
+    }, _callee14, null, [[1, 3]]);
+  }));
+  return _loadCategories.apply(this, arguments);
+}
+function confirm(msg) {
+  return new Promise(function (resolve) {
+    var prev = document.activeElement;
+    var el = document.createElement('div');
+    el.className = 'confirm-overlay';
+    el.innerHTML = `<div class="confirm-box"><p>${esc(msg)}</p><div class="actions">
+      <button class="cancel" style="background:var(--bg3);color:var(--fg)" tabindex="0">Cancel</button>
+      <button class="ok" tabindex="0">Confirm</button></div></div>`;
+    document.body.appendChild(el);
+    var okBtn = el.querySelector('.ok');
+    var cancelBtn = el.querySelector('.cancel');
+    okBtn.focus();
+    var doOk = function doOk() {
+      el.remove();
+      if (prev && prev.focus) prev.focus();
+      resolve(true);
+    };
+    var doCancel = function doCancel() {
+      el.remove();
+      if (prev && prev.focus) prev.focus();
+      resolve(false);
+    };
+    okBtn.onclick = doOk;
+    cancelBtn.onclick = doCancel;
+    el.onclick = function (e) {
+      if (e.target === el) doCancel();
+    };
+    // Trap focus within dialog and support Escape
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        doCancel();
+      }
+      if (e.key === 'Tab') {
+        var els = [cancelBtn, okBtn];
+        var idx = els.indexOf(document.activeElement);
+        if (e.shiftKey) {
+          els[(idx - 1 + els.length) % els.length].focus();
+        } else {
+          els[(idx + 1) % els.length].focus();
+        }
+        e.preventDefault();
+      }
+    });
+  });
+}
+
+// ============ LOGIN ============
+function renderLogin() {
+  setTitle('Login');
+  showBack(false);
+  $app.innerHTML = `
+    <div class="login-box">
+      <h2>JTech Forums</h2>
+      <p>Sign in with your forum account.</p>
+      <div class="field"><label for="loginUser">Username or Email</label>
+        <input type="text" id="loginUser" placeholder="Username or email" tabindex="0"></div>
+      <div class="field"><label for="loginPass">Password</label>
+        <input type="password" id="loginPass" placeholder="Password" tabindex="0"></div>
+      <div id="loginError" class="error" style="display:none"></div>
+      <button id="loginBtn" style="width:100%" tabindex="0">Sign In</button>
+    </div>`;
+  var doLogin = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+      var login, password, errEl, btn, csrfResp, csrfData, t, c, headers, body, resp, newToken, newCsrf, newCookies, d, user, _t, _t2;
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.p = _context.n) {
+          case 0:
+            login = document.getElementById('loginUser').value.trim();
+            password = document.getElementById('loginPass').value;
+            errEl = document.getElementById('loginError');
+            btn = document.getElementById('loginBtn');
+            if (!(!login || !password)) {
+              _context.n = 1;
+              break;
+            }
+            errEl.textContent = 'Both fields are required';
+            errEl.style.display = 'block';
+            return _context.a(2);
+          case 1:
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+            errEl.style.display = 'none';
+            _context.p = 2;
+            _context.p = 3;
+            _context.n = 4;
+            return fetch(PROXY + '/session/csrf.json', {
+              headers: {
+                'Accept': 'application/json'
+              }
+            });
+          case 4:
+            csrfResp = _context.v;
+            _context.n = 5;
+            return csrfResp.json();
+          case 5:
+            csrfData = _context.v;
+            if (csrfData.csrf) {
+              S.csrf = csrfData.csrf;
+              localStorage.setItem('jt_csrf', S.csrf);
+            }
+            t = csrfResp.headers.get('X-Session-Token');
+            if (t) {
+              S.token = t;
+              localStorage.setItem('jt_session_token', t);
+            }
+            c = csrfResp.headers.get('X-Cookies');
+            if (c) {
+              S.cookies = c;
+              localStorage.setItem('jt_cookies', c);
+            }
+            _context.n = 7;
+            break;
+          case 6:
+            _context.p = 6;
+            _t = _context.v;
+          case 7:
+            // Login
+            headers = {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json'
+            };
+            if (S.csrf) headers['X-CSRF-Token'] = S.csrf;
+            if (S.token) headers['X-Session-Token'] = S.token;
+            if (S.cookies) headers['X-Cookies'] = S.cookies;
+            body = `login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
+            _context.n = 8;
+            return fetch(PROXY + '/session.json', {
+              method: 'POST',
+              headers,
+              body
+            });
+          case 8:
+            resp = _context.v;
+            newToken = resp.headers.get('X-Session-Token');
+            if (newToken) {
+              S.token = newToken;
+              localStorage.setItem('jt_session_token', newToken);
+            }
+            newCsrf = resp.headers.get('X-CSRF-Token');
+            if (newCsrf) {
+              S.csrf = newCsrf;
+              localStorage.setItem('jt_csrf', newCsrf);
+            }
+            newCookies = resp.headers.get('X-Cookies');
+            if (newCookies) {
+              S.cookies = newCookies;
+              localStorage.setItem('jt_cookies', newCookies);
+            }
+            _context.n = 9;
+            return resp.json();
+          case 9:
+            d = _context.v;
+            if (!d.error) {
+              _context.n = 10;
+              break;
+            }
+            throw new Error(d.error);
+          case 10:
+            if (resp.ok) {
+              _context.n = 11;
+              break;
+            }
+            throw new Error(d.errors && d.errors.join(', ') || 'Login failed');
+          case 11:
+            user = d.user || {};
+            S.username = user.username || login;
+            S.userId = user.id || '';
+            localStorage.setItem('jt_username', S.username);
+            localStorage.setItem('jt_user_id', S.userId);
+            location.hash = '#/';
+            route();
+            _context.n = 13;
+            break;
+          case 12:
+            _context.p = 12;
+            _t2 = _context.v;
+            errEl.textContent = _t2.message;
+            errEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Sign In';
+          case 13:
+            return _context.a(2);
+        }
+      }, _callee, null, [[3, 6], [2, 12]]);
+    }));
+    return function doLogin() {
+      return _ref.apply(this, arguments);
+    };
+  }();
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  document.getElementById('loginPass').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('loginUser').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('loginPass').focus();
+  });
+  // Don't auto-focus input — brings up keyboard on mobile
+}
+function logout() {
+  return _logout.apply(this, arguments);
+} // ============ TOPICS ============
+function _logout() {
+  _logout = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee15() {
+    return _regenerator().w(function (_context15) {
+      while (1) switch (_context15.n) {
+        case 0:
+          _context15.n = 1;
+          return confirm('Log out of JTech Forums?');
+        case 1:
+          if (_context15.v) {
+            _context15.n = 2;
+            break;
+          }
+          return _context15.a(2);
+        case 2:
+          try {
+            api('/session/' + encodeURIComponent(S.username) + '.json', {
+              method: 'DELETE'
+            }).catch(function () {});
+          } catch (e) {}
+          S.token = '';
+          S.csrf = '';
+          S.cookies = '';
+          S.username = '';
+          S.userId = '';
+          localStorage.removeItem('jt_session_token');
+          localStorage.removeItem('jt_csrf');
+          localStorage.removeItem('jt_cookies');
+          localStorage.removeItem('jt_username');
+          localStorage.removeItem('jt_user_id');
+          location.hash = '#/';
+          route();
+        case 3:
+          return _context15.a(2);
+      }
+    }, _callee15);
+  }));
+  return _logout.apply(this, arguments);
+}
+var topicPage = 0,
+  topicLoading = false,
+  topicMore = true,
+  topicScrollCleanup = null;
+function topicItemHtml(t) {
+  var unread = (t.unread_posts || 0) + (t.new_posts || 0);
+  var statusIcons = (t.pinned ? '<span class="topic-status-icon">' + IC.pin + '</span>' : '') + (t.closed || t.archived ? '<span class="topic-status-icon">' + IC.lock + '</span>' : '');
+  return `<a class="list-item" href="#/t/${t.id}" tabindex="0">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div class="item-title">${statusIcons}${esc(t.title)}</div>
+        <div class="item-meta">
+          ${catBadge(t.category_id)}
+          <span>${t.posts_count - 1} replies</span>
+          <span>${timeAgo(t.last_posted_at)}</span>
+        </div>
+        ${t.excerpt ? `<div class="item-excerpt">${t.excerpt}</div>` : ''}
+      </div>
+      ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+    </div>
+  </a>`;
+}
+function loadMoreTopics() {
+  return _loadMoreTopics.apply(this, arguments);
+}
+function _loadMoreTopics() {
+  _loadMoreTopics = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee16() {
+    var loader, d, topics, list, _t15;
+    return _regenerator().w(function (_context16) {
+      while (1) switch (_context16.p = _context16.n) {
+        case 0:
+          if (!(topicLoading || !topicMore)) {
+            _context16.n = 1;
+            break;
+          }
+          return _context16.a(2);
+        case 1:
+          topicLoading = true;
+          loader = document.getElementById('topicLoader');
+          if (loader) loader.style.display = 'block';
+          _context16.p = 2;
+          _context16.n = 3;
+          return api('/latest.json' + (topicPage > 0 ? `?page=${topicPage}` : ''));
+        case 3:
+          d = _context16.v;
+          topics = d.topic_list && d.topic_list.topics || [];
+          if (!topics.length) {
+            topicMore = false;
+            if (loader) loader.textContent = 'No more topics';
+          } else {
+            list = document.getElementById('topicList');
+            if (list) list.insertAdjacentHTML('beforeend', topics.map(topicItemHtml).join(''));
+            topicPage++;
+          }
+          _context16.n = 5;
+          break;
+        case 4:
+          _context16.p = 4;
+          _t15 = _context16.v;
+        case 5:
+          topicLoading = false;
+          if (loader && topicMore) loader.style.display = 'none';
+        case 6:
+          return _context16.a(2);
+      }
+    }, _callee16, null, [[2, 4]]);
+  }));
+  return _loadMoreTopics.apply(this, arguments);
+}
+function renderTopics() {
+  return _renderTopics.apply(this, arguments);
+} // ============ TOPIC DETAIL ============
+function _renderTopics() {
+  _renderTopics = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee17() {
+    var d, topics, html, onScroll, _cleanup;
+    return _regenerator().w(function (_context17) {
+      while (1) switch (_context17.n) {
+        case 0:
+          setTitle('JTech Forums');
+          showBack(false);
+          $app.innerHTML = '<div class="loading">Loading topics...</div>';
+          _context17.n = 1;
+          return loadCategories();
+        case 1:
+          topicPage = 0;
+          topicMore = true;
+          _context17.n = 2;
+          return api('/latest.json');
+        case 2:
+          d = _context17.v;
+          topics = d.topic_list && d.topic_list.topics || [];
+          if (topics.length) {
+            _context17.n = 3;
+            break;
+          }
+          $app.innerHTML = '<div class="empty">No topics found</div>';
+          return _context17.a(2);
+        case 3:
+          topicPage = 1;
+          html = `<div id="topicList">`;
+          html += topics.map(topicItemHtml).join('');
+          html += '</div>';
+          html += '<div id="topicLoader" class="loading" style="display:none">Loading more...</div>';
+          $app.innerHTML = html;
+          showCreate('#/new-topic');
+
+          // Infinite scroll — clean up previous listener first
+          if (topicScrollCleanup) topicScrollCleanup();
+          onScroll = function onScroll() {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+              loadMoreTopics();
+            }
+          };
+          window.addEventListener('scroll', onScroll);
+          _cleanup = function cleanup() {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('hashchange', _cleanup);
+            topicScrollCleanup = null;
+          };
+          topicScrollCleanup = _cleanup;
+          window.addEventListener('hashchange', _cleanup);
+          focusContent();
+        case 4:
+          return _context17.a(2);
+      }
+    }, _callee17);
+  }));
+  return _renderTopics.apply(this, arguments);
+}
+function renderTopic(_x2) {
+  return _renderTopic.apply(this, arguments);
+}
+function _renderTopic() {
+  _renderTopic = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee22(id) {
+    var d, lastPost, highestNum, timings, allPostIds, loadedPosts, postNumberMap, loadedIds, earlierIds, html, remainingIds, replyToPostNumber, replyBox, uploadBtn, loadEarlierBtn, posts, last;
+    return _regenerator().w(function (_context22) {
+      while (1) switch (_context22.n) {
+        case 0:
+          showBack(true);
+          $app.innerHTML = '<div class="loading">Loading topic...</div>';
+          // Load topic near the last post so user sees the latest
+          _context22.n = 1;
+          return api(`/t/${id}/last.json`);
+        case 1:
+          d = _context22.v;
+          setTitle(d.title || 'Topic');
+
+          // Mark topic as read so unread badge clears on next topic list load
+          lastPost = d.post_stream && d.post_stream.posts || [];
+          highestNum = 0;
+          lastPost.forEach(function (p) {
+            if (p.post_number > highestNum) highestNum = p.post_number;
+          });
+          if (highestNum > 0) {
+            timings = {};
+            timings[highestNum] = 1;
+            api('/topics/timings.json', {
+              method: 'POST',
+              body: {
+                topic_id: parseInt(id),
+                topic_time: 1,
+                timings: timings
+              }
+            }).catch(function () {});
+          }
+
+          // Build a map of post_number for all posts in the stream
+          allPostIds = d.post_stream && d.post_stream.stream || [];
+          loadedPosts = d.post_stream && d.post_stream.posts || [];
+          postNumberMap = {};
+          loadedPosts.forEach(function (p) {
+            postNumberMap[p.id] = p.post_number;
+          });
+
+          // Earlier posts that aren't loaded yet (shown as "load earlier" button)
+          loadedIds = new Set(loadedPosts.map(function (p) {
+            return p.id;
+          }));
+          earlierIds = allPostIds.filter(function (pid) {
+            return !loadedIds.has(pid);
+          });
+          html = `<h2 style="padding:12px;font-size:1.1rem">${esc(d.title)}</h2>`; // Show "load earlier" at the top if there are older posts
+          if (earlierIds.length > 0) {
+            html += `<button id="loadEarlierPosts" tabindex="0" style="width:100%;margin:8px 0;background:var(--bg3);color:var(--fg)">Load ${earlierIds.length} earlier posts</button>`;
+          }
+          html += '<div id="postsContainer">';
+          html += loadedPosts.map(function (p) {
+            return renderPost(p, d);
+          }).join('');
+          html += '</div>';
+          remainingIds = earlierIds;
+          html += `<div id="replyIndicator" class="reply-indicator" style="display:none">
+    <span id="replyingToText">Replying to topic</span>
+    <button class="cancel-reply" id="cancelReply" tabindex="0">${IC.x}</button>
+  </div>`;
+          html += `<div class="compose" id="replyArea">
+    <textarea id="replyBox" placeholder="Press Enter to type a reply..." tabindex="0" readonly>${esc(getDraft('reply_' + id))}</textarea>
+    <div class="actions">
+      <button id="uploadBtn" tabindex="0" style="background:var(--bg3);color:var(--fg)">${IC.upload} Upload</button>
+      <input type="file" id="uploadFile" style="display:none">
+      <button id="emojiBtn" tabindex="0" style="background:var(--bg3);color:var(--fg)">${IC.smile}</button>
+      <button id="sendReply" tabindex="0">Post Reply</button>
+    </div>
+  </div>`;
+          $app.innerHTML = html;
+
+          // State for reply-to
+          replyToPostNumber = null; // Auto-save draft
+          replyBox = document.getElementById('replyBox');
+          replyBox.addEventListener('input', function () {
+            return saveDraft('reply_' + id, replyBox.value);
+          });
+          // Enter on readonly textarea opens it for editing (brings up keyboard)
+          replyBox.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && replyBox.readOnly) {
+              e.preventDefault();
+              replyBox.readOnly = false;
+              replyBox.placeholder = 'Write a reply...';
+              replyBox.focus();
+            }
+          });
+          replyBox.addEventListener('blur', function () {
+            if (!replyBox.readOnly) {
+              replyBox.readOnly = true;
+              replyBox.placeholder = 'Press Enter to type a reply...';
+            }
+          });
+
+          // @Mention autocomplete
+          (function () {
+            var mentionTimer = null;
+            var mentionDrop = document.createElement('div');
+            mentionDrop.className = 'mention-dropdown';
+            mentionDrop.style.display = 'none';
+            replyBox.parentNode.style.position = 'relative';
+            replyBox.parentNode.insertBefore(mentionDrop, replyBox.nextSibling);
+            var mentionIdx = -1;
+            function closeMention() {
+              mentionDrop.style.display = 'none';
+              mentionDrop.innerHTML = '';
+              mentionIdx = -1;
+            }
+            replyBox.addEventListener('input', function () {
+              if (replyBox.readOnly) return;
+              clearTimeout(mentionTimer);
+              var val = replyBox.value;
+              var pos = replyBox.selectionStart;
+              // Find @query before cursor
+              var before = val.substring(0, pos);
+              var match = before.match(/@(\w{2,})$/);
+              if (!match) {
+                closeMention();
+                return;
+              }
+              var term = match[1];
+              mentionTimer = setTimeout(/*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee18() {
+                var d, users, _t16;
+                return _regenerator().w(function (_context18) {
+                  while (1) switch (_context18.p = _context18.n) {
+                    case 0:
+                      _context18.p = 0;
+                      _context18.n = 1;
+                      return api('/u/search/users.json?term=' + encodeURIComponent(term) + '&topic_id=' + id + '&include_groups=false');
+                    case 1:
+                      d = _context18.v;
+                      users = d.users || [];
+                      if (users.length) {
+                        _context18.n = 2;
+                        break;
+                      }
+                      closeMention();
+                      return _context18.a(2);
+                    case 2:
+                      users = users.slice(0, 5);
+                      mentionDrop.innerHTML = users.map(function (u, i) {
+                        return '<div class="mention-item" data-username="' + esc(u.username) + '" tabindex="0">' + (u.avatar_template ? '<img src="' + avatarUrl(u.avatar_template, 20) + '" alt="" style="width:16px;height:16px;border-radius:50%;vertical-align:middle"> ' : '') + esc(u.username) + '</div>';
+                      }).join('');
+                      mentionDrop.style.display = 'block';
+                      mentionIdx = -1;
+                      mentionDrop.querySelectorAll('.mention-item').forEach(function (item) {
+                        item.addEventListener('click', function () {
+                          insertMention(item.dataset.username);
+                        });
+                        item.addEventListener('keydown', function (e) {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            insertMention(item.dataset.username);
+                          }
+                          if (e.key === 'Escape') {
+                            e.preventDefault();
+                            closeMention();
+                            replyBox.focus();
+                          }
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            var next = item.nextElementSibling;
+                            if (next) next.focus();
+                          }
+                          if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            var prev = item.previousElementSibling;
+                            if (prev) prev.focus();else replyBox.focus();
+                          }
+                        });
+                      });
+                      _context18.n = 4;
+                      break;
+                    case 3:
+                      _context18.p = 3;
+                      _t16 = _context18.v;
+                      closeMention();
+                    case 4:
+                      return _context18.a(2);
+                  }
+                }, _callee18, null, [[0, 3]]);
+              })), 300);
+            });
+            function insertMention(username) {
+              var val = replyBox.value;
+              var pos = replyBox.selectionStart;
+              var before = val.substring(0, pos);
+              var after = val.substring(pos);
+              var newBefore = before.replace(/@\w{2,}$/, '@' + username + ' ');
+              replyBox.value = newBefore + after;
+              replyBox.selectionStart = replyBox.selectionEnd = newBefore.length;
+              closeMention();
+              replyBox.focus();
+              replyBox.dispatchEvent(new Event('input'));
+            }
+            replyBox.addEventListener('keydown', function (e) {
+              if (mentionDrop.style.display === 'none') return;
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                var first = mentionDrop.querySelector('.mention-item');
+                if (first) first.focus();
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                closeMention();
+              }
+            });
+          })();
+
+          // Cancel reply-to
+          document.getElementById('cancelReply').addEventListener('click', function () {
+            replyToPostNumber = null;
+            document.getElementById('replyIndicator').style.display = 'none';
+          });
+
+          // Upload
+          uploadBtn = document.getElementById('uploadBtn');
+          uploadBtn.addEventListener('click', function () {
+            return document.getElementById('uploadFile').click();
+          });
+          document.getElementById('uploadFile').addEventListener('change', /*#__PURE__*/function () {
+            var _ref13 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee19(e) {
+              var file, r, _t17;
+              return _regenerator().w(function (_context19) {
+                while (1) switch (_context19.p = _context19.n) {
+                  case 0:
+                    file = e.target.files[0];
+                    if (file) {
+                      _context19.n = 1;
+                      break;
+                    }
+                    return _context19.a(2);
+                  case 1:
+                    _context19.p = 1;
+                    _context19.n = 2;
+                    return uploadFile(file, uploadBtn);
+                  case 2:
+                    r = _context19.v;
+                    replyBox.value += `\n![${file.name}](${r.short_url || r.url})`;
+                    replyBox.dispatchEvent(new Event('input'));
+                    _context19.n = 4;
+                    break;
+                  case 3:
+                    _context19.p = 3;
+                    _t17 = _context19.v;
+                    showAlert(_t17.message);
+                  case 4:
+                    return _context19.a(2);
+                }
+              }, _callee19, null, [[1, 3]]);
+            }));
+            return function (_x6) {
+              return _ref13.apply(this, arguments);
+            };
+          }());
+
+          // Emoji picker
+          document.getElementById('emojiBtn').addEventListener('click', function () {
+            var EMOJIS = ['\uD83D\uDC4D', '\uD83D\uDC4E', '\uD83D\uDE00', '\uD83D\uDE02', '\uD83D\uDE0A', '\uD83D\uDE0D', '\uD83E\uDD14', '\uD83D\uDE22', '\uD83D\uDE21', '\uD83D\uDE31', '\uD83D\uDE4F', '\uD83D\uDD25', '\u2764\uFE0F', '\uD83D\uDCAF', '\u2705', '\u274C', '\uD83C\uDF89', '\uD83D\uDC4B', '\uD83D\uDCAA', '\uD83D\uDE80', '\u2B50', '\uD83D\uDCA1', '\uD83C\uDFC6', '\uD83D\uDDE3\uFE0F', '\uD83D\uDCAC', '\uD83D\uDC40', '\uD83E\uDD1D', '\uD83C\uDF1F', '\uD83D\uDC9A', '\uD83D\uDC99', '\uD83D\uDC9C', '\uD83E\uDDE1', '\uD83D\uDC9B', '\uD83D\uDE07', '\uD83E\uDD23', '\uD83D\uDE09', '\uD83D\uDE0E', '\uD83E\uDD29', '\uD83D\uDE4C', '\uD83D\uDE18', '\uD83E\uDD17', '\uD83E\uDD2F', '\uD83E\uDD73', '\uD83D\uDE1C', '\uD83E\uDD7A', '\uD83D\uDE33', '\uD83D\uDE44', '\uD83D\uDE29', '\uD83E\uDD26', '\uD83D\uDE4B'];
+            var overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = '<div class="emoji-picker"><div class="emoji-grid">' + EMOJIS.map(function (e) {
+              return '<button class="emoji-item" tabindex="0">' + e + '</button>';
+            }).join('') + '</div></div>';
+            document.body.appendChild(overlay);
+            history.pushState({
+              emoji: true
+            }, '');
+            var closeEmoji = function closeEmoji() {
+              overlay.remove();
+            };
+            overlay.onclick = function (e) {
+              if (e.target === overlay) closeEmoji();
+            };
+            overlay.querySelectorAll('.emoji-item').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var val = replyBox.value;
+                var pos = replyBox.selectionStart || val.length;
+                replyBox.value = val.substring(0, pos) + btn.textContent + val.substring(pos);
+                replyBox.selectionStart = replyBox.selectionEnd = pos + btn.textContent.length;
+                closeEmoji();
+                replyBox.readOnly = false;
+                replyBox.focus();
+                replyBox.dispatchEvent(new Event('input'));
+              });
+            });
+            overlay.addEventListener('keydown', function (e) {
+              if (e.key === 'Escape') {
+                e.stopPropagation();
+                closeEmoji();
+              }
+            });
+            var _popHandler = function popHandler() {
+              closeEmoji();
+              window.removeEventListener('popstate', _popHandler);
+            };
+            window.addEventListener('popstate', _popHandler);
+            var firstEmoji = overlay.querySelector('.emoji-item');
+            if (firstEmoji) firstEmoji.focus();
+          });
+
+          // Post reply
+          document.getElementById('sendReply').addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee20() {
+            var raw, postBody, _t18;
+            return _regenerator().w(function (_context20) {
+              while (1) switch (_context20.p = _context20.n) {
+                case 0:
+                  raw = replyBox.value.trim();
+                  if (raw) {
+                    _context20.n = 1;
+                    break;
+                  }
+                  return _context20.a(2);
+                case 1:
+                  this.disabled = true;
+                  this.textContent = 'Posting...';
+                  _context20.p = 2;
+                  postBody = {
+                    topic_id: parseInt(id),
+                    raw
+                  };
+                  if (replyToPostNumber) postBody.reply_to_post_number = replyToPostNumber;
+                  _context20.n = 3;
+                  return api('/posts.json', {
+                    method: 'POST',
+                    body: postBody
+                  });
+                case 3:
+                  clearDraft('reply_' + id);
+                  _context20.n = 4;
+                  return renderTopic(id);
+                case 4:
+                  // Scroll to bottom to see new reply
+                  window.scrollTo(0, document.body.scrollHeight);
+                  _context20.n = 6;
+                  break;
+                case 5:
+                  _context20.p = 5;
+                  _t18 = _context20.v;
+                  showAlert('Error: ' + _t18.message);
+                  this.disabled = false;
+                  this.textContent = 'Post Reply';
+                case 6:
+                  return _context20.a(2);
+              }
+            }, _callee20, this, [[2, 5]]);
+          })));
+
+          // Load earlier posts
+          loadEarlierBtn = document.getElementById('loadEarlierPosts');
+          if (loadEarlierBtn) {
+            loadEarlierBtn.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee21() {
+              var batch, resp, newPosts, container, beforeScrollH, _t19;
+              return _regenerator().w(function (_context21) {
+                while (1) switch (_context21.p = _context21.n) {
+                  case 0:
+                    this.disabled = true;
+                    this.textContent = 'Loading...';
+                    _context21.p = 1;
+                    // Load last 20 from the earlier batch (closest to current view)
+                    batch = remainingIds.splice(-20);
+                    _context21.n = 2;
+                    return api(`/t/${id}/posts.json?post_ids[]=${batch.join('&post_ids[]=')}`);
+                  case 2:
+                    resp = _context21.v;
+                    newPosts = (resp.post_stream && resp.post_stream.posts || []).sort(function (a, b) {
+                      return a.post_number - b.post_number;
+                    });
+                    container = document.getElementById('postsContainer'); // Insert at the top of the container
+                    beforeScrollH = document.body.scrollHeight;
+                    newPosts.forEach(function (p) {
+                      postNumberMap[p.id] = p.post_number;
+                      container.insertAdjacentHTML('afterbegin', renderPost(p, d));
+                    });
+                    // Maintain scroll position so user doesn't jump
+                    window.scrollBy(0, document.body.scrollHeight - beforeScrollH);
+                    attachPostHandlers(container, id, replyBox, postNumberMap, function (n) {
+                      replyToPostNumber = n;
+                    });
+                    if (remainingIds.length > 0) {
+                      this.disabled = false;
+                      this.textContent = `Load ${remainingIds.length} earlier posts`;
+                    } else {
+                      this.remove();
+                    }
+                    _context21.n = 4;
+                    break;
+                  case 3:
+                    _context21.p = 3;
+                    _t19 = _context21.v;
+                    showAlert(_t19.message);
+                    this.disabled = false;
+                    this.textContent = 'Load earlier posts';
+                  case 4:
+                    return _context21.a(2);
+                }
+              }, _callee21, this, [[1, 3]]);
+            })));
+          }
+
+          // Attach all post interaction handlers
+          attachPostHandlers($app, id, replyBox, postNumberMap, function (n) {
+            replyToPostNumber = n;
+          });
+
+          // Scroll to last post and focus it
+          posts = document.querySelectorAll('.post');
+          if (posts.length) {
+            last = posts[posts.length - 1];
+            last.scrollIntoView({
+              behavior: 'instant'
+            });
+            last.focus();
+          }
+        case 2:
+          return _context22.a(2);
+      }
+    }, _callee22);
+  }));
+  return _renderTopic.apply(this, arguments);
+}
+function attachPostHandlers(container, topicId, replyBox, postNumberMap, setReplyTo) {
+  // React button - open reaction picker
+  container.querySelectorAll('[data-react-open]').forEach(function (btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', function () {
+      showReactionPicker(btn.dataset.reactOpen);
+    });
+  });
+
+  // Reaction pill click - short press toggles, or show who reacted
+  container.querySelectorAll('[data-react]').forEach(function (btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      var postId, reactionId, d, groups, target, gi, emoji, names, _t3;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.p = _context2.n) {
+          case 0:
+            postId = btn.dataset.postId;
+            reactionId = btn.dataset.react; // Show who reacted dialog, with option to toggle
+            btn.disabled = true;
+            _context2.p = 1;
+            _context2.n = 2;
+            return api('/discourse-reactions/posts/' + postId + '/reactions-users.json');
+          case 2:
+            d = _context2.v;
+            groups = d.reaction_users || [];
+            target = null;
+            gi = 0;
+          case 3:
+            if (!(gi < groups.length)) {
+              _context2.n = 5;
+              break;
+            }
+            if (!(groups[gi].id === reactionId)) {
+              _context2.n = 4;
+              break;
+            }
+            target = groups[gi];
+            return _context2.a(3, 5);
+          case 4:
+            gi++;
+            _context2.n = 3;
+            break;
+          case 5:
+            emoji = REACTION_EMOJI[reactionId] || reactionId;
+            if (target && target.users && target.users.length) {
+              names = target.users.map(function (u) {
+                return '@' + u.username;
+              }).join(', ');
+              showAlert(emoji + ' (' + target.count + '): ' + names);
+            } else {
+              showAlert(emoji + ': no reactions yet');
+            }
+            _context2.n = 7;
+            break;
+          case 6:
+            _context2.p = 6;
+            _t3 = _context2.v;
+            showAlert(_t3.message);
+          case 7:
+            btn.disabled = false;
+          case 8:
+            return _context2.a(2);
+        }
+      }, _callee2, null, [[1, 6]]);
+    })));
+  });
+
+  // Reply to post
+  container.querySelectorAll('[data-reply-to]').forEach(function (btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', function () {
+      var postId = parseInt(btn.dataset.replyTo);
+      var user = btn.dataset.replyUser;
+      var postNum = postNumberMap[postId] || postId;
+      setReplyTo(postNum);
+      var indicator = document.getElementById('replyIndicator');
+      document.getElementById('replyingToText').textContent = `Replying to @${user} (#${postNum})`;
+      indicator.style.display = 'flex';
+      replyBox.readOnly = false;
+      replyBox.placeholder = 'Write a reply...';
+      replyBox.focus();
+      replyBox.scrollIntoView({
+        behavior: 'smooth'
+      });
+    });
+  });
+
+  // Delete post
+  container.querySelectorAll('[data-delete-post]').forEach(function (btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+      var postId, _t4;
+      return _regenerator().w(function (_context3) {
+        while (1) switch (_context3.p = _context3.n) {
+          case 0:
+            postId = btn.dataset.deletePost;
+            _context3.n = 1;
+            return confirm('Delete this post?');
+          case 1:
+            if (_context3.v) {
+              _context3.n = 2;
+              break;
+            }
+            return _context3.a(2);
+          case 2:
+            btn.disabled = true;
+            _context3.p = 3;
+            _context3.n = 4;
+            return api(`/posts/${postId}.json`, {
+              method: 'DELETE'
+            });
+          case 4:
+            _context3.n = 5;
+            return renderTopic(topicId);
+          case 5:
+            _context3.n = 7;
+            break;
+          case 6:
+            _context3.p = 6;
+            _t4 = _context3.v;
+            showAlert(_t4.message);
+            btn.disabled = false;
+          case 7:
+            return _context3.a(2);
+        }
+      }, _callee3, null, [[3, 6]]);
+    })));
+  });
+
+  // Edit post
+  container.querySelectorAll('[data-edit-post]').forEach(function (btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee5() {
+      var postId, postEl, bodyEl, resp, raw, actionsEl, _t6;
+      return _regenerator().w(function (_context5) {
+        while (1) switch (_context5.p = _context5.n) {
+          case 0:
+            postId = btn.dataset.editPost;
+            postEl = document.getElementById('post-' + postId);
+            bodyEl = postEl && postEl.querySelector('.post-body');
+            if (bodyEl) {
+              _context5.n = 1;
+              break;
+            }
+            return _context5.a(2);
+          case 1:
+            // Fetch raw content
+            btn.disabled = true;
+            _context5.p = 2;
+            _context5.n = 3;
+            return api(`/posts/${postId}.json`);
+          case 3:
+            resp = _context5.v;
+            raw = resp.raw || '';
+            actionsEl = postEl.querySelector('.post-actions');
+            actionsEl.style.display = 'none';
+            bodyEl.innerHTML = `<textarea id="editBox-${postId}" style="width:100%;min-height:120px" tabindex="0">${esc(raw)}</textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="save-edit" data-post-id="${postId}" tabindex="0">Save</button>
+            <button class="cancel-edit" data-post-id="${postId}" tabindex="0" style="background:var(--bg3);color:var(--fg)">Cancel</button>
+          </div>`;
+            bodyEl.querySelector('.save-edit').addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
+              var newRaw, te, _t5;
+              return _regenerator().w(function (_context4) {
+                while (1) switch (_context4.p = _context4.n) {
+                  case 0:
+                    newRaw = document.getElementById('editBox-' + postId).value.trim();
+                    if (newRaw) {
+                      _context4.n = 1;
+                      break;
+                    }
+                    return _context4.a(2);
+                  case 1:
+                    this.disabled = true;
+                    this.textContent = 'Saving...';
+                    _context4.p = 2;
+                    _context4.n = 3;
+                    return api(`/posts/${postId}.json`, {
+                      method: 'PUT',
+                      body: {
+                        post: {
+                          raw: newRaw
+                        }
+                      }
+                    });
+                  case 3:
+                    te = postEl.closest('[data-topic-id]');
+                    _context4.n = 4;
+                    return renderTopic(te && te.dataset.topicId || (location.hash.match(/\d+/) || [])[0]);
+                  case 4:
+                    _context4.n = 6;
+                    break;
+                  case 5:
+                    _context4.p = 5;
+                    _t5 = _context4.v;
+                    showAlert(_t5.message);
+                    this.disabled = false;
+                    this.textContent = 'Save';
+                  case 6:
+                    return _context4.a(2);
+                }
+              }, _callee4, this, [[2, 5]]);
+            })));
+            bodyEl.querySelector('.cancel-edit').addEventListener('click', function () {
+              return renderTopic((location.hash.match(/\d+/) || [])[0]);
+            });
+            _context5.n = 5;
+            break;
+          case 4:
+            _context5.p = 4;
+            _t6 = _context5.v;
+            showAlert(_t6.message);
+            btn.disabled = false;
+          case 5:
+            return _context5.a(2);
+        }
+      }, _callee5, null, [[2, 4]]);
+    })));
+  });
+
+  // Poll vote
+  container.querySelectorAll('[data-poll-vote]').forEach(function (opt) {
+    if (opt._bound) return;
+    opt._bound = true;
+    opt.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee6() {
+      var pollName, optVal, postId, _t7;
+      return _regenerator().w(function (_context6) {
+        while (1) switch (_context6.p = _context6.n) {
+          case 0:
+            pollName = opt.dataset.pollName;
+            optVal = opt.dataset.pollVote;
+            postId = opt.dataset.postId;
+            _context6.p = 1;
+            _context6.n = 2;
+            return api('/polls/vote.json', {
+              method: 'PUT',
+              body: {
+                post_id: parseInt(postId),
+                poll_name: pollName,
+                options: [optVal]
+              }
+            });
+          case 2:
+            _context6.n = 3;
+            return renderTopic((location.hash.match(/\d+/) || [])[0]);
+          case 3:
+            _context6.n = 5;
+            break;
+          case 4:
+            _context6.p = 4;
+            _t7 = _context6.v;
+            showAlert(_t7.message);
+          case 5:
+            return _context6.a(2);
+        }
+      }, _callee6, null, [[1, 4]]);
+    })));
+  });
+
+  // Flag post
+  container.querySelectorAll('[data-flag]').forEach(function (btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', function () {
+      var postId = btn.dataset.flag;
+      showFlagDialog(postId);
+    });
+  });
+}
+
+// Keyboard-friendly alert replacement
+function showAlert(msg) {
+  return new Promise(function (resolve) {
+    var prev = document.activeElement;
+    var el = document.createElement('div');
+    el.className = 'confirm-overlay';
+    el.innerHTML = `<div class="confirm-box"><p>${esc(msg)}</p><div class="actions">
+      <button class="ok" tabindex="0">OK</button></div></div>`;
+    document.body.appendChild(el);
+    var okBtn = el.querySelector('.ok');
+    okBtn.focus();
+    var close = function close() {
+      el.remove();
+      if (prev && prev.focus) prev.focus();
+      resolve();
+    };
+    okBtn.onclick = close;
+    el.onclick = function (e) {
+      if (e.target === el) close();
+    };
+    okBtn.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+  });
+}
+function showReactionPicker(postId) {
+  var prev = document.activeElement;
+  var el = document.createElement('div');
+  el.className = 'confirm-overlay';
+  el.innerHTML = '<div class="confirm-box"><p>React:</p><div class="reaction-picker-grid">' + REACTION_LIST.map(function (r) {
+    return '<button class="reaction-pick" data-rid="' + r + '" tabindex="0">' + (REACTION_EMOJI[r] || r) + '</button>';
+  }).join('') + '</div><button class="cancel" tabindex="0" style="background:var(--bg3);color:var(--fg);margin-top:8px;width:100%">Cancel</button></div>';
+  document.body.appendChild(el);
+  var first = el.querySelector('.reaction-pick');
+  if (first) first.focus();
+  var close = function close() {
+    el.remove();
+    if (prev && prev.focus) prev.focus();
+  };
+  el.querySelector('.cancel').onclick = close;
+  el.onclick = function (e) {
+    if (e.target === el) close();
+  };
+  el.querySelectorAll('.reaction-pick').forEach(function (btn) {
+    btn.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee7() {
+      var _t8;
+      return _regenerator().w(function (_context7) {
+        while (1) switch (_context7.p = _context7.n) {
+          case 0:
+            btn.disabled = true;
+            _context7.p = 1;
+            _context7.n = 2;
+            return api('/discourse-reactions/posts/' + postId + '/custom-reactions/' + encodeURIComponent(btn.dataset.rid) + '/toggle.json', {
+              method: 'PUT'
+            });
+          case 2:
+            close();
+            _context7.n = 3;
+            return renderTopic((location.hash.match(/\d+/) || [])[0]);
+          case 3:
+            _context7.n = 5;
+            break;
+          case 4:
+            _context7.p = 4;
+            _t8 = _context7.v;
+            close();
+            showAlert(_t8.message);
+          case 5:
+            return _context7.a(2);
+        }
+      }, _callee7, null, [[1, 4]]);
+    })));
+  });
+  el.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      close();
+    }
+    if (e.key === 'ArrowRight') {
+      var next = document.activeElement.nextElementSibling;
+      if (next && next.classList.contains('reaction-pick')) {
+        next.focus();
+        e.preventDefault();
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      var prev = document.activeElement.previousElementSibling;
+      if (prev && prev.classList.contains('reaction-pick')) {
+        prev.focus();
+        e.preventDefault();
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      var cancelBtn = el.querySelector('.cancel');
+      if (cancelBtn) {
+        cancelBtn.focus();
+        e.preventDefault();
+      }
+    }
+    if (e.key === 'ArrowUp') {
+      var lastPick = el.querySelectorAll('.reaction-pick');
+      if (lastPick.length && document.activeElement === el.querySelector('.cancel')) {
+        lastPick[lastPick.length - 1].focus();
+        e.preventDefault();
+      }
+    }
+  });
+}
+function showFlagDialog(postId) {
+  var prev = document.activeElement;
+  var el = document.createElement('div');
+  el.className = 'confirm-overlay';
+  el.innerHTML = '<div class="confirm-box"><p>Flag this post as:</p><div style="display:flex;flex-direction:column;gap:6px">' + '<button class="flag-opt" data-type="8" tabindex="0">It\'s Spam</button>' + '<button class="flag-opt" data-type="4" tabindex="0">It\'s Inappropriate</button>' + '<button class="flag-opt" data-type="3" tabindex="0">It\'s Off-Topic</button>' + '<button class="flag-opt" data-type="7" tabindex="0">Something Else</button>' + '<button class="cancel" tabindex="0" style="background:var(--bg3);color:var(--fg);margin-top:4px">Cancel</button>' + '</div></div>';
+  document.body.appendChild(el);
+  var first = el.querySelector('.flag-opt');
+  if (first) first.focus();
+  var close = function close() {
+    el.remove();
+    if (prev && prev.focus) prev.focus();
+  };
+  el.querySelector('.cancel').onclick = close;
+  el.onclick = function (e) {
+    if (e.target === el) close();
+  };
+  el.querySelectorAll('.flag-opt').forEach(function (btn) {
+    btn.addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee8() {
+      var typeId, _t9;
+      return _regenerator().w(function (_context8) {
+        while (1) switch (_context8.p = _context8.n) {
+          case 0:
+            typeId = parseInt(btn.dataset.type);
+            btn.disabled = true;
+            btn.textContent = 'Flagging...';
+            _context8.p = 1;
+            _context8.n = 2;
+            return api('/post_actions.json', {
+              method: 'POST',
+              body: {
+                id: parseInt(postId),
+                post_action_type_id: typeId,
+                flag_topic: false
+              }
+            });
+          case 2:
+            close();
+            showAlert('Post flagged');
+            _context8.n = 4;
+            break;
+          case 3:
+            _context8.p = 3;
+            _t9 = _context8.v;
+            close();
+            showAlert(_t9.message);
+          case 4:
+            return _context8.a(2);
+        }
+      }, _callee8, null, [[1, 3]]);
+    })));
+  });
+  el.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      close();
+    }
+  });
+}
+function renderPost(p, topicData) {
+  var body = fixPostHtml(p.cooked || '');
+  var isOwn = p.username === S.username;
+
+  // Render polls
+  var pollsHtml = '';
+  if (p.polls && p.polls.length) {
+    p.polls.forEach(function (poll) {
+      var totalVotes = poll.voters || 0;
+      pollsHtml += `<div class="poll"><h4>${esc(poll.title || poll.name)}</h4>`;
+      (poll.options || []).forEach(function (opt) {
+        var pct = totalVotes > 0 ? Math.round((opt.votes || 0) / totalVotes * 100) : 0;
+        var voted = opt.voted ? 'voted' : '';
+        pollsHtml += `<div class="poll-option ${voted}" tabindex="0" data-poll-vote="${esc(opt.id)}" data-poll-name="${esc(poll.name)}" data-post-id="${p.id}">
+          <span>${esc(opt.html || opt.text || '')}</span>
+          <span class="poll-pct">${pct}% (${opt.votes || 0})</span>
+        </div>`;
+      });
+      pollsHtml += `<div style="font-size:.75rem;color:var(--fg2);margin-top:4px">${totalVotes} votes</div></div>`;
+    });
+  }
+
+  // Reply info
+  var replyInfo = '';
+  if (p.reply_to_post_number) {
+    var replyAvatar = p.reply_to_user && p.reply_to_user.avatar_template ? `<img src="${avatarUrl(p.reply_to_user.avatar_template, 20)}" alt="" style="width:16px;height:16px;border-radius:50%;vertical-align:middle">` : '';
+    replyInfo = `<span style="font-size:.75rem;color:var(--fg2);margin-left:auto;display:inline-flex;align-items:center;gap:3px">${IC.reply} ${replyAvatar}#${p.reply_to_post_number}</span>`;
+  }
+  return `<div class="post" id="post-${p.id}" tabindex="0">
+    <div class="post-header">
+      <img class="post-avatar" src="${avatarUrl(p.avatar_template, 48)}" alt="" loading="lazy">
+      <div>
+        <a class="post-author" href="#/u/${esc(p.username)}" tabindex="-1">${esc(p.username)}</a>
+        <div class="post-date">${timeAgo(p.created_at)}</div>
+      </div>
+      <span class="post-num">#${p.post_number}</span>
+      ${replyInfo}
+    </div>
+    <div class="post-body">${body}${pollsHtml}</div>
+    ${function () {
+    var rxs = p.reactions || [];
+    return rxs.length ? '<div class="post-reactions">' + rxs.map(function (r) {
+      var em = REACTION_EMOJI[r.id] || r.id;
+      var active = p.current_user_reaction === r.id ? ' reacted' : '';
+      return '<button class="reaction-pill' + active + '" data-react="' + esc(r.id) + '" data-post-id="' + p.id + '" tabindex="-1">' + em + ' ' + r.count + '</button>';
+    }).join('') + '</div>' : '';
+  }()}
+    <div class="post-actions">
+      <button data-react-open="${p.id}" tabindex="-1">${IC.heart} React</button>
+      <button data-reply-to="${p.id}" data-reply-user="${esc(p.username)}" tabindex="-1">${IC.reply} Reply</button>
+      ${isOwn ? `<button data-edit-post="${p.id}" tabindex="-1">${IC.edit} Edit</button>
+      <button data-delete-post="${p.id}" tabindex="-1" style="color:var(--danger)">${IC.trash} Delete</button>` : `<button data-flag="${p.id}" tabindex="-1">${IC.flag} Flag</button>`}
+    </div>
+  </div>`;
+}
+
+// ============ NEW TOPIC ============
+function renderNewTopic() {
+  setTitle('New Topic');
+  showBack(true);
+  $app.innerHTML = `<div class="compose">
+    <div class="field"><label for="ntTitle">Title</label>
+      <input type="text" id="ntTitle" value="${esc(getDraft('new_topic_title'))}" placeholder="Topic title" tabindex="0"></div>
+    <div class="field"><label for="ntCat">Category</label>
+      <select id="ntCat" tabindex="0"><option value="">Select...</option>
+        ${Object.keys(S.categories).map(function (k) {
+    return S.categories[k];
+  }).map(function (c) {
+    return `<option value="${c.id}">${esc(c.name)}</option>`;
+  }).join('')}
+      </select></div>
+    <div class="field"><label for="ntBody">Body</label>
+      <textarea id="ntBody" placeholder="Write your topic..." tabindex="0">${esc(getDraft('new_topic_body'))}</textarea></div>
+    <div class="actions">
+      <button id="uploadNt" tabindex="0" style="background:var(--bg3);color:var(--fg)">${IC.upload} Upload</button>
+      <input type="file" id="uploadNtFile" style="display:none">
+      <button id="postTopic" tabindex="0">Create Topic</button>
+    </div>
+  </div>`;
+  document.getElementById('ntTitle').focus();
+  document.getElementById('ntTitle').addEventListener('input', function (e) {
+    return saveDraft('new_topic_title', e.target.value);
+  });
+  document.getElementById('ntBody').addEventListener('input', function (e) {
+    return saveDraft('new_topic_body', e.target.value);
+  });
+  var uploadNtBtn = document.getElementById('uploadNt');
+  uploadNtBtn.addEventListener('click', function () {
+    return document.getElementById('uploadNtFile').click();
+  });
+  document.getElementById('uploadNtFile').addEventListener('change', /*#__PURE__*/function () {
+    var _ref9 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9(e) {
+      var file, r, b, _t0;
+      return _regenerator().w(function (_context9) {
+        while (1) switch (_context9.p = _context9.n) {
+          case 0:
+            file = e.target.files[0];
+            if (file) {
+              _context9.n = 1;
+              break;
+            }
+            return _context9.a(2);
+          case 1:
+            _context9.p = 1;
+            _context9.n = 2;
+            return uploadFile(file, uploadNtBtn);
+          case 2:
+            r = _context9.v;
+            b = document.getElementById('ntBody');
+            b.value += `\n![${file.name}](${r.short_url || r.url})`;
+            b.dispatchEvent(new Event('input'));
+            _context9.n = 4;
+            break;
+          case 3:
+            _context9.p = 3;
+            _t0 = _context9.v;
+            showAlert(_t0.message);
+          case 4:
+            return _context9.a(2);
+        }
+      }, _callee9, null, [[1, 3]]);
+    }));
+    return function (_x3) {
+      return _ref9.apply(this, arguments);
+    };
+  }());
+  document.getElementById('postTopic').addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0() {
+    var title, raw, cat, d, _t1;
+    return _regenerator().w(function (_context0) {
+      while (1) switch (_context0.p = _context0.n) {
+        case 0:
+          title = document.getElementById('ntTitle').value.trim();
+          raw = document.getElementById('ntBody').value.trim();
+          cat = document.getElementById('ntCat').value;
+          if (!(!title || !raw)) {
+            _context0.n = 1;
+            break;
+          }
+          return _context0.a(2, showAlert('Title and body are required'));
+        case 1:
+          this.disabled = true;
+          this.textContent = 'Creating...';
+          _context0.p = 2;
+          _context0.n = 3;
+          return api('/posts.json', {
+            method: 'POST',
+            body: {
+              title,
+              raw,
+              category: cat ? parseInt(cat) : undefined
+            }
+          });
+        case 3:
+          d = _context0.v;
+          clearDraft('new_topic_title');
+          clearDraft('new_topic_body');
+          location.hash = `#/t/${d.topic_id}`;
+          _context0.n = 5;
+          break;
+        case 4:
+          _context0.p = 4;
+          _t1 = _context0.v;
+          showAlert('Error: ' + _t1.message);
+          this.disabled = false;
+          this.textContent = 'Create Topic';
+        case 5:
+          return _context0.a(2);
+      }
+    }, _callee0, this, [[2, 4]]);
+  })));
+}
+
+// ============ NEW MESSAGE ============
+function renderNewMessage() {
+  setTitle('New Message');
+  showBack(true);
+  $app.innerHTML = `<div class="compose">
+    <div class="field"><label for="pmTo">To (username)</label>
+      <input type="text" id="pmTo" placeholder="username" tabindex="0"></div>
+    <div class="field"><label for="pmTitle">Subject</label>
+      <input type="text" id="pmTitle" placeholder="Subject" tabindex="0"></div>
+    <div class="field"><label for="pmBody">Message</label>
+      <textarea id="pmBody" placeholder="Write your message..." tabindex="0"></textarea></div>
+    <button id="sendPm" tabindex="0" style="width:100%">Send Message</button>
+  </div>`;
+  document.getElementById('pmTo').focus();
+  document.getElementById('sendPm').addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
+    var to, title, raw, d, _t10;
+    return _regenerator().w(function (_context1) {
+      while (1) switch (_context1.p = _context1.n) {
+        case 0:
+          to = document.getElementById('pmTo').value.trim();
+          title = document.getElementById('pmTitle').value.trim();
+          raw = document.getElementById('pmBody').value.trim();
+          if (!(!to || !title || !raw)) {
+            _context1.n = 1;
+            break;
+          }
+          return _context1.a(2, showAlert('All fields required'));
+        case 1:
+          this.disabled = true;
+          this.textContent = 'Sending...';
+          _context1.p = 2;
+          _context1.n = 3;
+          return api('/posts.json', {
+            method: 'POST',
+            body: {
+              title,
+              raw,
+              target_recipients: to,
+              archetype: 'private_message'
+            }
+          });
+        case 3:
+          d = _context1.v;
+          location.hash = `#/messages/${d.topic_id}`;
+          _context1.n = 5;
+          break;
+        case 4:
+          _context1.p = 4;
+          _t10 = _context1.v;
+          showAlert('Error: ' + _t10.message);
+          this.disabled = false;
+          this.textContent = 'Send Message';
+        case 5:
+          return _context1.a(2);
+      }
+    }, _callee1, this, [[2, 4]]);
+  })));
+}
+
+// ============ MESSAGES ============
+function renderMessages() {
+  return _renderMessages.apply(this, arguments);
+} // ============ NOTIFICATIONS ============
+function _renderMessages() {
+  _renderMessages = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee23() {
+    var _d, topics, _t20;
+    return _regenerator().w(function (_context23) {
+      while (1) switch (_context23.p = _context23.n) {
+        case 0:
+          setTitle('Messages');
+          showBack(false);
+          $app.innerHTML = '<div class="loading">Loading messages...</div>';
+          _context23.p = 1;
+          _context23.n = 2;
+          return api(`/topics/private-messages/${encodeURIComponent(S.username)}.json`);
+        case 2:
+          _d = _context23.v;
+          topics = _d.topic_list && _d.topic_list.topics || [];
+          if (!topics.length) {
+            $app.innerHTML = '<div class="empty">No messages</div>';
+          } else {
+            $app.innerHTML = topics.map(function (t) {
+              return `
+        <a class="list-item" href="#/messages/${t.id}" tabindex="0">
+          <div class="item-title">${esc(t.title)}</div>
+          <div class="item-meta"><span>${t.posts_count} posts</span><span>${timeAgo(t.last_posted_at)}</span></div>
+        </a>`;
+            }).join('');
+          }
+          showCreate('#/new-message');
+          focusContent();
+          _context23.n = 4;
+          break;
+        case 3:
+          _context23.p = 3;
+          _t20 = _context23.v;
+          $app.innerHTML = `<div class="error">${esc(_t20.message)}</div>`;
+        case 4:
+          return _context23.a(2);
+      }
+    }, _callee23, null, [[1, 3]]);
+  }));
+  return _renderMessages.apply(this, arguments);
+}
+function renderNotifications() {
+  return _renderNotifications.apply(this, arguments);
+} // ============ PROFILE ============
+function _renderNotifications() {
+  _renderNotifications = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee25() {
+    var _d2, notifs, html, _t22;
+    return _regenerator().w(function (_context25) {
+      while (1) switch (_context25.p = _context25.n) {
+        case 0:
+          setTitle('Notifications');
+          showBack(false);
+          $app.innerHTML = '<div class="loading">Loading notifications...</div>';
+          _context25.p = 1;
+          _context25.n = 2;
+          return api('/notifications.json');
+        case 2:
+          _d2 = _context25.v;
+          notifs = _d2.notifications || [];
+          if (notifs.length) {
+            _context25.n = 3;
+            break;
+          }
+          $app.innerHTML = '<div class="empty">No notifications</div>';
+          return _context25.a(2);
+        case 3:
+          html = `<button id="markAllRead" tabindex="0" style="margin:8px;background:var(--bg3);color:var(--fg)">Mark all read</button>`;
+          html += notifs.map(function (n) {
+            var types = {
+              1: IC.msg,
+              2: IC.msg,
+              5: IC.heart,
+              6: IC.msg,
+              9: IC.msg,
+              12: IC.bookmark,
+              15: IC.msg
+            };
+            var icon = types[n.notification_type] || IC.bell;
+            var text = n.data && n.data.display_username ? esc(n.data.display_username) + ': ' : '';
+            var topic = n.data && n.data.topic_title || n.data && n.data.badge_name || n.fancy_title || '';
+            var href = n.topic_id ? `#/t/${n.topic_id}` : '#/notifications';
+            return `<a class="notif-item ${n.read ? '' : 'unread'}" href="${href}" tabindex="0">
+        <span class="notif-icon">${icon}</span>
+        <span class="notif-text">${text}${esc(topic)}</span>
+        <span class="notif-time">${timeAgo(n.created_at)}</span>
+      </a>`;
+          }).join('');
+          $app.innerHTML = html;
+          document.getElementById('markAllRead').addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee24() {
+            var _t21;
+            return _regenerator().w(function (_context24) {
+              while (1) switch (_context24.p = _context24.n) {
+                case 0:
+                  this.disabled = true;
+                  this.textContent = 'Marking...';
+                  _context24.p = 1;
+                  _context24.n = 2;
+                  return api('/notifications/mark-read.json', {
+                    method: 'PUT'
+                  });
+                case 2:
+                  _context24.n = 3;
+                  return renderNotifications();
+                case 3:
+                  _context24.n = 5;
+                  break;
+                case 4:
+                  _context24.p = 4;
+                  _t21 = _context24.v;
+                  showAlert(_t21.message);
+                  this.disabled = false;
+                  this.textContent = 'Mark all read';
+                case 5:
+                  return _context24.a(2);
+              }
+            }, _callee24, this, [[1, 4]]);
+          })));
+          focusContent();
+          _context25.n = 5;
+          break;
+        case 4:
+          _context25.p = 4;
+          _t22 = _context25.v;
+          $app.innerHTML = `<div class="error">${esc(_t22.message)}</div>`;
+        case 5:
+          return _context25.a(2);
+      }
+    }, _callee25, null, [[1, 4]]);
+  }));
+  return _renderNotifications.apply(this, arguments);
+}
+function renderProfile(_x4) {
+  return _renderProfile.apply(this, arguments);
+} // ============ SETTINGS ============
+function _renderProfile() {
+  _renderProfile = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee26(username) {
+    var uname, _d3, u, html, act, posts, actHtml, _t23, _t24;
+    return _regenerator().w(function (_context26) {
+      while (1) switch (_context26.p = _context26.n) {
+        case 0:
+          showBack(username !== S.username && username !== 'me');
+          uname = username === 'me' ? S.username : username;
+          setTitle(uname);
+          $app.innerHTML = '<div class="loading">Loading profile...</div>';
+          _context26.p = 1;
+          _context26.n = 2;
+          return api(`/u/${encodeURIComponent(uname)}.json`);
+        case 2:
+          _d3 = _context26.v;
+          u = _d3.user;
+          html = `<div class="profile-header">
+      <img class="avatar" src="${avatarUrl(u.avatar_template, 120)}" alt="${esc(u.username)}">
+      <h2>${esc(u.name || u.username)}</h2>
+      <div style="color:var(--fg2);font-size:.85rem">@${esc(u.username)}</div>
+      ${u.bio_cooked ? `<div class="bio">${fixPostHtml(u.bio_cooked)}</div>` : ''}
+    </div>
+    <div class="profile-stats">
+      <div><span class="num">${u.post_count || 0}</span>Posts</div>
+      <div><span class="num">${u.topic_count || 0}</span>Topics</div>
+      <div><span class="num">${u.days_visited || 0}</span>Days</div>
+    </div>
+    <div style="padding:8px 12px;font-size:.85rem;display:flex;align-items:center;gap:6px;color:var(--fg2)">${IC.shield} Trust Level: ${u.trust_level || 0} (${['new', 'basic', 'member', 'regular', 'leader'][u.trust_level] || 'new'})</div>
+    ${u.badges && u.badges.length ? '<div style="padding:4px 12px;display:flex;flex-wrap:wrap;gap:4px">' + u.badges.map(function (b) {
+            return '<span class="user-badge">' + esc(b.name) + '</span>';
+          }).join('') + '</div>' : ''}`;
+          if (uname === S.username) {
+            html += `<div style="padding:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button tabindex="0" id="editProfileBtn">Edit Profile</button>
+        <button tabindex="0" style="background:var(--danger)" id="logoutBtn">Log Out</button>
+      </div>`;
+          }
+          html += `<h3 style="padding:12px 12px 4px;font-size:.95rem">Recent Activity</h3>`;
+          $app.innerHTML = html;
+          if (uname === S.username) {
+            document.getElementById('editProfileBtn').addEventListener('click', function () {
+              return location.hash = '#/settings';
+            });
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+              return logout();
+            });
+          }
+
+          // Load activity
+          _context26.p = 3;
+          _context26.n = 4;
+          return api(`/u/${encodeURIComponent(uname)}/activity.json`);
+        case 4:
+          act = _context26.v;
+          posts = act.user_actions || [];
+          if (posts.length) {
+            actHtml = posts.slice(0, 20).map(function (a) {
+              return `
+          <a class="list-item" href="#/t/${a.topic_id}" tabindex="0">
+            <div class="item-title">${esc(a.title)}</div>
+            <div class="item-meta"><span>${timeAgo(a.created_at)}</span></div>
+          </a>`;
+            }).join('');
+            $app.insertAdjacentHTML('beforeend', actHtml);
+          } else {
+            $app.insertAdjacentHTML('beforeend', '<div class="empty">No recent activity</div>');
+          }
+          _context26.n = 6;
+          break;
+        case 5:
+          _context26.p = 5;
+          _t23 = _context26.v;
+        case 6:
+          focusContent();
+          _context26.n = 8;
+          break;
+        case 7:
+          _context26.p = 7;
+          _t24 = _context26.v;
+          $app.innerHTML = `<div class="error">${esc(_t24.message)}</div>`;
+        case 8:
+          return _context26.a(2);
+      }
+    }, _callee26, null, [[3, 5], [1, 7]]);
+  }));
+  return _renderProfile.apply(this, arguments);
+}
+function renderSettings() {
+  setTitle('Settings');
+  showBack(true);
+  $app.innerHTML = `<div class="compose">
+    <h3 style="margin-bottom:12px">Edit Profile</h3>
+    <div class="field"><label for="setName">Display Name</label>
+      <input type="text" id="setName" tabindex="0"></div>
+    <div class="field"><label for="setBio">Bio</label>
+      <textarea id="setBio" tabindex="0"></textarea></div>
+    <div class="field"><label for="setStatus">Status</label>
+      <input type="text" id="setStatus" placeholder="Status emoji + text" tabindex="0"></div>
+    <button id="saveProfBtn" tabindex="0" style="width:100%;margin-bottom:8px">Save</button>
+    <button tabindex="0" style="width:100%;background:var(--danger)" id="settingsLogout">Log Out</button>
+  </div>`;
+  api(`/u/${encodeURIComponent(S.username)}.json`).then(function (d) {
+    var el = document.getElementById('setName');
+    if (el) el.value = d.user && d.user.name || '';
+    var bio = document.getElementById('setBio');
+    if (bio) bio.value = d.user && d.user.bio_raw || '';
+  }).catch(function () {});
+  requestAnimationFrame(function () {
+    var el = document.getElementById('setName');
+    if (el) el.focus();
+  });
+  document.getElementById('saveProfBtn').addEventListener('click', /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10() {
+    var st, _t11;
+    return _regenerator().w(function (_context10) {
+      while (1) switch (_context10.p = _context10.n) {
+        case 0:
+          this.disabled = true;
+          this.textContent = 'Saving...';
+          _context10.p = 1;
+          _context10.n = 2;
+          return api(`/u/${encodeURIComponent(S.username)}.json`, {
+            method: 'PUT',
+            body: {
+              name: document.getElementById('setName').value,
+              bio_raw: document.getElementById('setBio').value
+            }
+          });
+        case 2:
+          st = document.getElementById('setStatus').value.trim();
+          if (!st) {
+            _context10.n = 3;
+            break;
+          }
+          _context10.n = 3;
+          return api('/user-status.json', {
+            method: 'PUT',
+            body: {
+              description: st
+            }
+          });
+        case 3:
+          location.hash = '#/u/me';
+          _context10.n = 5;
+          break;
+        case 4:
+          _context10.p = 4;
+          _t11 = _context10.v;
+          showAlert('Error: ' + _t11.message);
+          this.disabled = false;
+          this.textContent = 'Save';
+        case 5:
+          return _context10.a(2);
+      }
+    }, _callee10, this, [[1, 4]]);
+  })));
+  document.getElementById('settingsLogout').addEventListener('click', function () {
+    return logout();
+  });
+}
+
+// ============ MENU ============
+var menuOpen = false;
+function updateMenuItems() {
+  var logged = isLoggedIn();
+  $menu.querySelectorAll('[data-auth]').forEach(function (el) {
+    return el.style.display = logged ? '' : 'none';
+  });
+  var authBtn = document.getElementById('menuAuthBtn');
+  if (logged) {
+    authBtn.textContent = '';
+    authBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Log Out';
+    authBtn.style.color = 'var(--danger)';
+  } else {
+    authBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Log In';
+    authBtn.style.color = 'var(--accent)';
+  }
+}
+function toggleMenu(open) {
+  var show = open !== undefined ? open : !menuOpen;
+  menuOpen = show;
+  $menu.classList.toggle('open', show);
+  if (show) {
+    updateMenuItems();
+    history.pushState({
+      menu: true
+    }, '');
+    var first = $menu.querySelector('a:not([style*="display: none"])');
+    if (first) first.focus();
+  }
+}
+window.addEventListener('popstate', function (e) {
+  if (menuOpen) {
+    menuOpen = false;
+    $menu.classList.remove('open');
+    $menuBtn.focus();
+    e.stopImmediatePropagation();
+  }
+});
+$menuBtn.addEventListener('click', function () {
+  return toggleMenu();
+});
+// Close menu on item click
+$menu.querySelectorAll('a').forEach(function (a) {
+  return a.addEventListener('click', function () {
+    return toggleMenu(false);
+  });
+});
+document.getElementById('menuAuthBtn').addEventListener('click', function (e) {
+  e.preventDefault();
+  toggleMenu(false);
+  if (isLoggedIn()) logout();else {
+    location.hash = '#/';
+    route();
+  }
+});
+// Close menu on outside click
+document.addEventListener('click', function (e) {
+  if ($menu.classList.contains('open') && !$menu.contains(e.target) && e.target !== $menuBtn) toggleMenu(false);
+});
+
+// ============ SCALE ============
+var scale = parseInt(localStorage.getItem('jt_scale') || '100');
+function applyScale() {
+  document.documentElement.style.fontSize = 15 * scale / 100 + 'px';
+  document.getElementById('scaleLabel').textContent = scale + '%';
+}
+applyScale();
+document.getElementById('scaleDown').addEventListener('click', function (e) {
+  e.preventDefault();
+  scale = Math.max(50, scale - 10);
+  localStorage.setItem('jt_scale', scale);
+  applyScale();
+});
+document.getElementById('scaleUp').addEventListener('click', function (e) {
+  e.preventDefault();
+  scale = Math.min(200, scale + 10);
+  localStorage.setItem('jt_scale', scale);
+  applyScale();
+});
+
+// ============ THEME ============
+var $themeBtn = document.getElementById('themeBtn');
+var sunSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+var moonSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+function applyTheme(light) {
+  document.documentElement.classList.toggle('light', light);
+  $themeBtn.innerHTML = light ? moonSvg : sunSvg;
+  localStorage.setItem('jt_theme', light ? 'light' : 'dark');
+}
+applyTheme(localStorage.getItem('jt_theme') === 'light');
+$themeBtn.addEventListener('click', function () {
+  return applyTheme(!document.documentElement.classList.contains('light'));
+});
+
+// ============ SEARCH ============
+function renderSearch() {
+  return _renderSearch.apply(this, arguments);
+} // ============ PULL TO REFRESH ============
+function _renderSearch() {
+  _renderSearch = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee28() {
+    var qs, q, html, doSearch;
+    return _regenerator().w(function (_context28) {
+      while (1) switch (_context28.n) {
+        case 0:
+          qs = location.hash.split('?')[1] || '';
+          q = '';
+          qs.split('&').forEach(function (p) {
+            var kv = p.split('=');
+            if (kv[0] === 'q') q = decodeURIComponent(kv[1] || '');
+          });
+          setTitle('Search');
+          showBack(true);
+          html = `<div class="search-bar">
+    <input type="search" id="searchInput" value="${esc(q)}" placeholder="Search forums..." tabindex="0">
+    <button id="searchGo" tabindex="0">Go</button>
+  </div>`;
+          html += '<div id="searchResults"></div>';
+          $app.innerHTML = html;
+          doSearch = /*#__PURE__*/function () {
+            var _ref17 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee27() {
+              var query, results, _d4, rhtml, topics, users, _t25;
+              return _regenerator().w(function (_context27) {
+                while (1) switch (_context27.p = _context27.n) {
+                  case 0:
+                    query = document.getElementById('searchInput').value.trim();
+                    if (query) {
+                      _context27.n = 1;
+                      break;
+                    }
+                    return _context27.a(2);
+                  case 1:
+                    // Update URL without re-rendering
+                    history.replaceState(null, '', `#/search?q=${encodeURIComponent(query)}`);
+                    results = document.getElementById('searchResults');
+                    results.innerHTML = '<div class="loading">Searching...</div>';
+                    _context27.p = 2;
+                    _context27.n = 3;
+                    return api(`/search.json?q=${encodeURIComponent(query)}`);
+                  case 3:
+                    _d4 = _context27.v;
+                    rhtml = '';
+                    topics = _d4.topics || [];
+                    users = _d4.users || [];
+                    if (users.length) {
+                      rhtml += '<h3 style="padding:8px 12px;font-size:.9rem;color:var(--fg2)">Users</h3>';
+                      rhtml += users.map(function (u) {
+                        return `
+          <a class="list-item" href="#/u/${esc(u.username)}" tabindex="0">
+            <div class="item-title">@${esc(u.username)}</div>
+            ${u.name ? `<div class="item-meta">${esc(u.name)}</div>` : ''}
+          </a>`;
+                      }).join('');
+                    }
+                    if (topics.length) {
+                      rhtml += '<h3 style="padding:8px 12px;font-size:.9rem;color:var(--fg2)">Topics</h3>';
+                      rhtml += topics.map(function (t) {
+                        return `
+          <a class="list-item" href="#/t/${t.id}" tabindex="0">
+            <div class="item-title">${esc(t.title)}</div>
+            <div class="item-meta">${catBadge(t.category_id)}<span>${timeAgo(t.created_at)}</span></div>
+          </a>`;
+                      }).join('');
+                    }
+                    if (!rhtml) rhtml = '<div class="empty">No results found</div>';
+                    results.innerHTML = rhtml;
+                    _context27.n = 5;
+                    break;
+                  case 4:
+                    _context27.p = 4;
+                    _t25 = _context27.v;
+                    results.innerHTML = `<div class="error">${esc(_t25.message)}</div>`;
+                  case 5:
+                    return _context27.a(2);
+                }
+              }, _callee27, null, [[2, 4]]);
+            }));
+            return function doSearch() {
+              return _ref17.apply(this, arguments);
+            };
+          }();
+          document.getElementById('searchGo').addEventListener('click', doSearch);
+          document.getElementById('searchInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') doSearch();
+          });
+          document.getElementById('searchInput').focus();
+
+          // Auto-search if query present
+          if (q) doSearch();
+        case 1:
+          return _context28.a(2);
+      }
+    }, _callee28);
+  }));
+  return _renderSearch.apply(this, arguments);
+}
+(function () {
+  var startY = 0,
+    pulling = false,
+    ptr = null;
+  function ensurePtr() {
+    ptr = document.getElementById('ptr');
+    if (!ptr) {
+      ptr = document.createElement('div');
+      ptr.id = 'ptr';
+      ptr.textContent = 'Pull to refresh';
+      $app.parentNode.insertBefore(ptr, $app);
+    }
+    return ptr;
+  }
+  document.addEventListener('touchstart', function (e) {
+    if (window.scrollY === 0 && isLoggedIn()) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+      ensurePtr();
+    }
+  }, {
+    passive: true
+  });
+  document.addEventListener('touchmove', function (e) {
+    if (!pulling) return;
+    var dy = e.touches[0].clientY - startY;
+    if (dy > 10 && dy < 150 && window.scrollY === 0) {
+      ptr.classList.add('visible');
+      ptr.textContent = dy > 70 ? 'Release to refresh' : 'Pull to refresh';
+    } else if (dy <= 0) {
+      ptr.classList.remove('visible');
+      pulling = false;
+    }
+  }, {
+    passive: true
+  });
+  document.addEventListener('touchend', /*#__PURE__*/function () {
+    var _ref11 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11(e) {
+      var dy, _t12;
+      return _regenerator().w(function (_context11) {
+        while (1) switch (_context11.p = _context11.n) {
+          case 0:
+            if (!(!pulling || !ptr)) {
+              _context11.n = 1;
+              break;
+            }
+            pulling = false;
+            return _context11.a(2);
+          case 1:
+            dy = (e.changedTouches[0] && e.changedTouches[0].clientY || 0) - startY;
+            if (!(dy > 70 && ptr.classList.contains('visible'))) {
+              _context11.n = 5;
+              break;
+            }
+            ptr.textContent = 'Refreshing...';
+            ptr.classList.add('refreshing');
+            _context11.p = 2;
+            _context11.n = 3;
+            return route();
+          case 3:
+            _context11.n = 5;
+            break;
+          case 4:
+            _context11.p = 4;
+            _t12 = _context11.v;
+          case 5:
+            ptr.classList.remove('visible', 'refreshing');
+            pulling = false;
+          case 6:
+            return _context11.a(2);
+        }
+      }, _callee11, null, [[2, 4]]);
+    }));
+    return function (_x5) {
+      return _ref11.apply(this, arguments);
+    };
+  }(), {
+    passive: true
+  });
+})();
+
+// ============ FOCUS MANAGEMENT ============
+// D-pad arrow key navigation: move focus between focusable elements
+function getFocusables() {
+  var sel = 'a[tabindex="0"],button:not(:disabled),[tabindex="0"],input,textarea,select';
+  // Check for open overlays first — if one exists, constrain focus to it
+  var overlay = document.querySelector('.confirm-overlay');
+  if (overlay) {
+    var overlayEls = [].slice.call(overlay.querySelectorAll(sel));
+    return overlayEls.filter(function (el) {
+      return (el.offsetParent !== null || el.offsetWidth > 0) && el.getAttribute('tabindex') !== '-1';
+    });
+  }
+  var all = [].slice.call(document.getElementById('topbar').querySelectorAll(sel)).concat([].slice.call($app.querySelectorAll(sel)));
+  return all.filter(function (el) {
+    return (el.offsetParent !== null || el.offsetWidth > 0) && el.getAttribute('tabindex') !== '-1';
+  });
+}
+document.addEventListener('keydown', function (e) {
+  var tag = document.activeElement && document.activeElement.tagName;
+  var inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  // Enter/Space on div[tabindex] acts as click
+  if ((e.key === 'Enter' || e.key === ' ') && tag === 'DIV' && document.activeElement.hasAttribute('tabindex')) {
+    e.preventDefault();
+    document.activeElement.click();
+    return;
+  }
+  // Arrow up/down move focus
+  // For inputs/textareas: allow escape at boundaries
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && inInput) {
+    var el = document.activeElement;
+    if (tag === 'SELECT') return;
+    if (tag === 'TEXTAREA') {
+      // Only escape textarea if cursor is at very end (down) or very start (up)
+      if (e.key === 'ArrowDown' && el.selectionStart < el.value.length) return;
+      if (e.key === 'ArrowUp' && el.selectionStart > 0) return;
+    }
+    // For INPUT or textarea at boundary, fall through to focus navigation
+  }
+  var isDown = e.key === 'ArrowDown' || e.key === 'ArrowRight';
+  var isUp = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+  // Left/right in inputs control cursor, don't intercept
+  if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && inInput) return;
+  if (isDown || isUp) {
+    var els = getFocusables();
+    if (!els.length) return;
+    var idx = els.indexOf(document.activeElement);
+    var next;
+    if (isDown) {
+      next = idx < 0 ? 0 : Math.min(idx + 1, els.length - 1);
+    } else {
+      next = idx < 0 ? 0 : Math.max(idx - 1, 0);
+    }
+    els[next].focus();
+    e.preventDefault();
+  }
+});
+
+// Auto-scroll focused elements into view
+document.addEventListener('focusin', function () {
+  if (document.activeElement && document.activeElement !== document.body) {
+    requestAnimationFrame(function () {
+      var el = document.activeElement;
+      var rect = el.getBoundingClientRect();
+      var topH = document.getElementById('topbar').offsetHeight;
+      // If element is taller than viewport or top is above topbar, scroll to start
+      var vh = window.innerHeight;
+      if (rect.height > vh - topH || rect.top < topH) {
+        el.scrollIntoView({
+          block: 'start',
+          behavior: 'smooth'
+        });
+      } else {
+        el.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth'
+        });
+      }
+    });
+  }
+});
+
+// Post activation: Enter on post shows actions, Escape goes back to post
+function activatePost(post) {
+  document.querySelectorAll('.post.active').forEach(function (p) {
+    return deactivatePost(p);
+  });
+  post.classList.add('active');
+  post.querySelectorAll('.post-actions button').forEach(function (b) {
+    return b.setAttribute('tabindex', '0');
+  });
+  post.querySelectorAll('.post-reactions button').forEach(function (b) {
+    return b.setAttribute('tabindex', '0');
+  });
+  post.querySelectorAll('.post-body a').forEach(function (a) {
+    return a.setAttribute('tabindex', '0');
+  });
+  post.querySelectorAll('.post-body summary').forEach(function (s) {
+    return s.setAttribute('tabindex', '0');
+  });
+  var first = post.querySelector('.post-reactions button') || post.querySelector('.post-actions button') || post.querySelector('.post-body a') || post.querySelector('.post-body summary');
+  if (first) first.focus();
+}
+function deactivatePost(post) {
+  post.classList.remove('active');
+  post.querySelectorAll('.post-actions button').forEach(function (b) {
+    return b.setAttribute('tabindex', '-1');
+  });
+  post.querySelectorAll('.post-reactions button').forEach(function (b) {
+    return b.setAttribute('tabindex', '-1');
+  });
+  post.querySelectorAll('.post-body a').forEach(function (a) {
+    return a.setAttribute('tabindex', '-1');
+  });
+  post.querySelectorAll('.post-body summary').forEach(function (s) {
+    return s.setAttribute('tabindex', '-1');
+  });
+}
+document.addEventListener('click', function (e) {
+  var post = e.target.closest('.post');
+  // Don't intercept clicks on links, images, or action buttons inside posts
+  if (e.target.closest('.post-actions')) return;
+  if (e.target.closest('.post-body img') || e.target.tagName === 'IMG') return;
+  if (e.target.closest('.post-body a') || e.target.tagName === 'A') return;
+  if (post && post.classList.contains('active')) {
+    deactivatePost(post);
+    post.focus();
+    return;
+  }
+  if (post && post.hasAttribute('tabindex')) activatePost(post);
+});
+
+// Focus first interactive element in #app after route changes
+function focusContent() {
+  requestAnimationFrame(function () {
+    var el = $app.querySelector('a[tabindex="0"],button:not(:disabled),[tabindex="0"]');
+    if (el) el.focus();
+  });
+}
+
+// ============ INIT ============
+route();</script>
+</body>
+</html>
