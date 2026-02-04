@@ -1,3 +1,5 @@
+Development has moved over to https://github.com/TripleU613/dumbcourse
+
 # jtech-web
 
 A lightweight, single-page web client for the Discourse forum at forums.jtechforums.org. Deployed as a Cloudflare Worker.
